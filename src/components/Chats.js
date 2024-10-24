@@ -41,7 +41,7 @@ const Chats = ({ onSelectUser }) => {
                                 alt={user.username}
                                 className='userAvatar'
                             />
-                            
+                            <span className='username'>{user.username}</span>
                         </div>
                     </div>
                 ))
