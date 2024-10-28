@@ -1,113 +1,53 @@
 import React, { useState } from 'react';
-import AttachIcon from '../assets/Attach.png'; // Ensure the correct relative path
+import { FaPaperPlane, FaImage, FaPaperclip } from 'react-icons/fa';  // Import icons
 
-const Input = ({ selectedUser, socket, currentUserId, setMessages }) => {
+const Input = ({ selectedUser, currentUserId, socket }) => {
   const [message, setMessage] = useState('');
-  const [file, setFile] = useState(null); // State for the file
-  const [preview, setPreview] = useState(null); // State for the file preview (image)
+  const [file, setFile] = useState(null);
 
-  // Helper function to upload and read the file as base64
-  const handleFileUpload = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file); // Convert to base64
-    });
-  };
-
-  const handleSendMessage = async () => {
-    if (!selectedUser) {
-      console.error('No user selected!');
-      return;
-    }
-
+  const sendMessage = () => {
     if (message.trim() || file) {
-      const messageData = {
-        message,
-        sender_id: currentUserId, // Use the currentUserId prop
-        recipient_id: selectedUser.id,
-        timestamp: new Date().toISOString(),
+      const newMessage = {
+        text: message,
+        senderId: currentUserId,
+        receiverId: selectedUser.id,
+        timestamp: Date.now(),
+        file,  // Optionally include file if it's uploaded
       };
-
-      // If a file is attached, process it
-      if (file) {
-        const fileData = await handleFileUpload(file);
-        messageData.file = fileData; // Append the base64 encoded file
-      }
-
-      // Debugging line: log the message before sending
-      console.log('Message data being sent:', messageData);
-
-      try {
-        // Optimistically add the message to the UI before sending via WebSocket
-        setMessages((prevMessages) => [...prevMessages, messageData]);
-
-        // Send message via WebSocket
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify(messageData)); // Ensure WebSocket connection is open
-          console.log('Message sent successfully');
-        } else {
-          console.error('WebSocket connection is not open');
-        }
-      } catch (error) {
-        console.error('Error sending message:', error);
-      }
-
-      // Reset input fields
+      socket.emit('send_message', newMessage);
       setMessage('');
-      setFile(null);
-      setPreview(null); // Reset the preview
+      setFile(null);  // Clear file input after sending
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileUpload = (e) => {
     const selectedFile = e.target.files[0];
-    setFile(selectedFile); // Store the selected file in state
-
-    if (selectedFile && selectedFile.type.startsWith('image/')) {
-      const previewURL = URL.createObjectURL(selectedFile); // Create a local URL for image preview
-      setPreview(previewURL);
-    } else {
-      setPreview(null); // No preview for non-image files
-    }
+    setFile(selectedFile);
   };
 
   return (
-    <div className="input" style={{ display: 'flex', alignItems: 'center' }}>
+    <div className="input">
       <input
         type="text"
-        placeholder="Type your message..."
+        placeholder="Type a message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        style={{ flexGrow: 1, marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
       />
-
       <input
-        id="file-input"
         type="file"
-        onChange={handleFileChange}
+        id="fileUpload"
         style={{ display: 'none' }}
+        onChange={handleFileUpload}
       />
-
-      <label htmlFor="file-input">
-        <img
-          src={AttachIcon}
-          alt="Attach"
-          style={{ cursor: 'pointer', width: '24px', marginLeft: '10px' }}
-        />
+      <label htmlFor="fileUpload">
+        <FaPaperclip className="icon" title="Send file" />
       </label>
-
-      {preview ? (
-        <div className="preview" style={{ marginLeft: '10px' }}>
-          <img src={preview} alt="Preview" style={{ maxHeight: '100px' }} />
-        </div>
-      ) : (
-        file && <p style={{ marginLeft: '10px' }}>{file.name}</p>
-      )}
-
-      <button onClick={handleSendMessage} className="input-button">
-        Send
+      <label htmlFor="fileUpload">
+        <FaImage className="icon" title="Send image" />
+      </label>
+      <button onClick={sendMessage}>
+       Send <FaPaperPlane />
       </button>
     </div>
   );
