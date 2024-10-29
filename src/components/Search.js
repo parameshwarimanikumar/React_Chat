@@ -4,6 +4,8 @@ import axios from 'axios';
 const Search = () => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -11,7 +13,9 @@ const Search = () => {
         const response = await axios.get('http://localhost:8000/api/users/');
         setUsers(response.data);
       } catch (error) {
-        console.error('Error fetching user data:', error.response ? error.response.data : error.message);
+        setError('Error fetching user data. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -36,26 +40,31 @@ const Search = () => {
           onChange={handleSearch}
         />
       </div>
-      <div className='userChat'>
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map(user => (
-            <div key={user.id} className='userChatInfo'>
-              <img
-                src={user.profile_picture || '/assets/default-avatar.jpeg'}
-                alt={user.username}
-                className='userAvatar'
-              />
-              <div className='userChatDetails'>
-                <span>{user.username}</span>
+      {loading && <p>Loading users...</p>}
+      {error && <p className='error'>{error}</p>}
+      {/* Only render user list if searchTerm has a value */}
+      {searchTerm && (
+        <div className='userChat'>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map(user => (
+              <div key={user.id} className='userChatInfo'>
+                <img
+                  src={user.profile_picture || '/assets/default-avatar.jpeg'}
+                  alt={user.username}
+                  className='userAvatar'
+                />
+                <div className='userChatDetails'>
+                  <span>{user.username}</span>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className='noResults'>
+              <p>No users found</p>
             </div>
-          ))
-        ) : (
-          <div className='noResults'>
-            <p>No users found</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
