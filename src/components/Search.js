@@ -35,7 +35,7 @@ const Search = () => {
       <div className='searchForm'>
         <input
           type='text'
-          placeholder='Find a user'
+          placeholder='Find or search a user'
           value={searchTerm}
           onChange={handleSearch}
         />
