@@ -15,8 +15,11 @@ class UpdateProfilePictureSerializer(serializers.ModelSerializer):
 
     def get_profile_picture_url(self, obj):
         request = self.context.get('request')
-        if obj.profile_picture:
+        if request is not None and obj.profile_picture:
             return request.build_absolute_uri(obj.profile_picture.url)
+        elif request is not None:
+            # Return a default profile picture URL if there's no profile picture set
+            return request.build_absolute_uri('/media/default_profile_picture.jpg')
         return None
 
 class UserSerializer(serializers.ModelSerializer):
@@ -28,7 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_profile_picture_url(self, obj):
         request = self.context.get('request')
-        if obj.profile_picture:
+        if request is not None and obj.profile_picture:
             return request.build_absolute_uri(obj.profile_picture.url)
-        # Return a default profile picture URL
-        return request.build_absolute_uri('/media/default_profile_picture.jpg')
+        elif request is not None:
+            # Return a default profile picture URL if there's no profile picture set
+            return request.build_absolute_uri('/media/default_profile_picture.jpg')
+        return None

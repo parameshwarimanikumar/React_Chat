@@ -1,3 +1,4 @@
+# views.py
 import logging
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
@@ -12,7 +13,6 @@ from .serializers import UserSerializer, UpdateProfilePictureSerializer, Message
 # Set up logging
 logger = logging.getLogger(__name__)
 
-# User login
 @api_view(['POST'])
 def login_user(request):
     email = request.data.get('email')
@@ -28,7 +28,6 @@ def login_user(request):
         }, status=status.HTTP_200_OK)
     return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-# User registration
 @api_view(['POST'])
 def create_user(request):
     serializer = UserSerializer(data=request.data)
@@ -37,21 +36,16 @@ def create_user(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Get messages between users
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_messages(request, user_id):
     logger.info(f"User {request.user} is trying to access messages with user_id: {user_id}")
     
     if not request.user.is_authenticated:
-        logger.warning("User is not authenticated.")
         return Response({'error': 'User not authenticated.'}, status=status.HTTP_403_FORBIDDEN)
     
     try:
-        # Check if the user exists
         CustomUser.objects.get(id=user_id)
-        
-        # Fetch messages between authenticated user and selected user
         messages = Message.objects.filter(
             (Q(sender=request.user) & Q(receiver_id=user_id)) |
             (Q(sender_id=user_id) & Q(receiver=request.user))
@@ -60,13 +54,11 @@ def get_messages(request, user_id):
         serializer = MessageSerializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except CustomUser.DoesNotExist:
-        logger.error(f"User with ID {user_id} does not exist.")
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# Send a message
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_message(request):
@@ -86,7 +78,6 @@ def send_message(request):
     except CustomUser.DoesNotExist:
         return Response({'error': 'Receiver not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-# Update profile picture
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_profile_picture(request):
@@ -102,21 +93,16 @@ def update_profile_picture(request):
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# List all users
 @api_view(['GET'])
 def user_list(request):
     users = CustomUser.objects.all()
     serializer = UserSerializer(users, many=True, context={'request': request})
     return Response(serializer.data)
 
-# Get the current user
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
     logger.info(f"Request made by user: {request.user} (Authenticated: {request.user.is_authenticated})")
-    
-    if not request.user.is_authenticated:
-        return Response({'error': 'User is not authenticated.'}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = UserSerializer(request.user)
+    serializer = UserSerializer(request.user, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
