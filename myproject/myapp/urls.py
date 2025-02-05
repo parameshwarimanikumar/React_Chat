@@ -16,5 +16,5 @@ urlpatterns = [
     path('send-message/', send_message, name='send_message'),
     path('update-profile-picture/', update_profile_picture, name='update_profile_picture'),
     path('users/', user_list, name='user_list'),
-    path('current-user/', current_user, name='current_user'),
+    path('current_user/', current_user, name='current_user'),  # Updated URL pattern to match the React fetch URL
 ]

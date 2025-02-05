@@ -9,8 +9,17 @@ const Chat = ({ selectedUser, currentUserId, socket, isTyping }) => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    // Get JWT token from localStorage
+    const token = localStorage.getItem('access_token'); 
+
     // Fetch current user data from the updated endpoint
-    fetch('/api/current-user/')
+    fetch('/api/current_user/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,  // Add JWT token to headers
+        'Content-Type': 'application/json',
+      },
+    })
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -18,13 +27,13 @@ const Chat = ({ selectedUser, currentUserId, socket, isTyping }) => {
         return response.json();
       })
       .then(data => {
-        setCurrentUser(data); // Set the fetched current user data
+        setCurrentUser(data);  // Set the fetched current user data
       })
       .catch(error => console.error('Error fetching current user:', error));
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);  // Empty dependency array means this runs once on mount
 
-  console.log("Selected User:", selectedUser); // Log selected user details
-  console.log("Current User:", currentUser); // Log current user details
+  console.log("Selected User:", selectedUser);  // Log selected user details
+  console.log("Current User:", currentUser);  // Log current user details
 
   return (
     <div className='chat'>
@@ -32,9 +41,9 @@ const Chat = ({ selectedUser, currentUserId, socket, isTyping }) => {
         {selectedUser ? (
           <div className="chatHeader">
             <img
-              src={selectedUser.profile_picture || Cam} // Use selectedUser.profile_picture for the profile image
+              src={selectedUser.profile_picture || Cam}  // Use selectedUser.profile_picture for the profile image
               alt={`${selectedUser.username} avatar`} 
-              className="userAvatar" // Ensure the class name matches the CSS
+              className="userAvatar"  // Ensure the class name matches the CSS
             />
             <div className="userDetails">
               <span>{selectedUser.username}</span>

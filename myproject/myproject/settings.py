@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,12 +41,16 @@ MIDDLEWARE = [
 ]
 
 # CORS policy for development
-CORS_ALLOW_ALL_ORIGINS = True  # Change this in production!
+CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  # React app's URL
+    'https://yourfrontenddomain.com',  # Frontend domain in production
+]
 
 # Authentication model and backend
-AUTH_USER_MODEL = 'myapp.CustomUser'  # Replace 'myapp' with your actual app name
+AUTH_USER_MODEL = 'myapp.CustomUser'
 AUTHENTICATION_BACKENDS = [
-    'myapp.backends.EmailBackend',  # Custom authentication backend
+    'myapp.backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',  # Default backend
 ]
 
@@ -54,9 +59,19 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-        # Uncomment the line below if using JWT
-        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+}
+
+# JWT settings
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # URL configuration module
@@ -66,7 +81,7 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # You can add template directories here
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -98,9 +113,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Static files configuration
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Adjust as necessary
+
 if DEBUG:
     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -135,4 +152,3 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Add any additional settings or configurations here
