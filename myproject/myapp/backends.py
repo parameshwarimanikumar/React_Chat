@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 class EmailBackend(BaseBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):
         UserModel = get_user_model()
+        
+        if email is None or password is None:
+            logger.warning("Email or password not provided.")
+            return None
+        
         try:
             user = UserModel.objects.get(email=email)
             if user.check_password(password):

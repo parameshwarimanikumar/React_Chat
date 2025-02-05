@@ -20,40 +20,38 @@
 /* Navbar Styles */
 .navbar {
   display: flex;
-  justify-content: space-between; /* Space between logo and user info */
-  align-items: center; /* Vertically center items */
-  background-color: #4f5860; /* Background color for the navbar */
-  padding: 10px 20px; /* Padding around the navbar */
-  color: white; /* Text color */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Bottom border */
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #333;
+  color: white;
 }
 
-.navbar .logo {
-  font-size: 24px; /* Logo font size */
-  font-weight: bold; /* Bold text */
+.logo {
+  font-size: 24px;
+  font-weight: bold;
 }
 
-.navbar .user {
-  display: flex; /* Display user info in a row */
-  align-items: center; /* Vertically center the items */
+.user {
+  display: flex;
+  align-items: center;
 }
 
-.navbar .user span {
-  margin-right: 15px; /* Space between username and button */
+.user span {
+  margin-right: 10px;
 }
 
-.navbar button {
-  background-color: #4278bf; /* Logout button background color */
-  border: none; /* Remove default border */
-  border-radius: 5px; /* Rounded corners */
-  color: white; /* Text color */
-  padding: 5px 10px; /* Padding inside the button */
-  cursor: pointer; /* Change cursor to pointer */
-  transition: background-color 0.3s; /* Transition effect */
+button {
+  padding: 5px 10px;
+  cursor: pointer;
+  background-color: #aab4aa;
+  color: white;
+  border: none;
+  border-radius: 5px;
 }
 
-.navbar button:hover {
-  background-color: #11744b; /* Darker shade on hover */
+button:hover {
+  background-color: #10b521;
 }
 
 

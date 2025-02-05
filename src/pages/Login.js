@@ -11,24 +11,20 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        const loginData = {
-            email: email,
-            password: password,
-        };
+        const loginData = { email, password };
 
         try {
             const response = await fetch('http://localhost:8000/api/login/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(loginData),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('authToken', data.access);  // Store access token
+                localStorage.setItem('refreshToken', data.refresh);  // Optionally store refresh token
                 localStorage.setItem('username', data.username);
                 navigate("/home");
             } else {

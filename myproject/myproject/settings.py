@@ -5,16 +5,16 @@ from datetime import timedelta
 # Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Secret key for Django
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'default-secret-key')
+# Secret key for Django (ensure to set this in production)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-secret-key')
 
-# Set debug to True for development
+# Debug mode (True for development, False for production)
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-# Hosts allowed during development
+# Allowed hosts for the application
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-# Installed apps including Django, REST framework, Channels, etc.
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -22,10 +22,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',  # Django REST Framework
-    'corsheaders',     # CORS for allowing cross-origin requests
-    'myapp',           # Your custom app, replace 'myapp' with your actual app name
-    'channels',        # Django Channels for WebSockets
+    'rest_framework',
+    'corsheaders',
+    'myapp',  # Replace 'myapp' with your actual app name
+    'channels',
 ]
 
 # Middleware configuration
@@ -40,21 +40,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS policy for development
-CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
+# CORS policy settings
+CORS_ALLOW_ALL_ORIGINS = True  # Ensure this is False in production
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # React app's URL
-    'https://yourfrontenddomain.com',  # Frontend domain in production
+    'http://localhost:3000',  # React app for development
+    'https://yourfrontenddomain.com',  # Replace with your frontend domain in production
 ]
 
-# Authentication model and backend
+# Custom user model and authentication backends
 AUTH_USER_MODEL = 'myapp.CustomUser'
 AUTHENTICATION_BACKENDS = [
-    'myapp.backends.EmailBackend',
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'myapp.backends.EmailBackend',  # Custom email backend
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Django REST framework configuration
+# Django REST framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -63,9 +63,9 @@ REST_FRAMEWORK = {
     ],
 }
 
-# JWT settings
+# Simple JWT configuration
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -74,7 +74,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# URL configuration module
+# URL configuration
 ROOT_URLCONF = 'myproject.urls'
 
 # Template settings
@@ -94,41 +94,42 @@ TEMPLATES = [
     },
 ]
 
-# ASGI application for Channels
+# ASGI application for WebSockets
 ASGI_APPLICATION = 'myproject.asgi.application'
 
-# Channels and Redis configuration for WebSocket communication
+# Channel layers for Redis configuration
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],  # Redis should be running locally on port 6379
+            'hosts': [('127.0.0.1', 6379)],  # Ensure Redis is running on this port
         },
     },
 }
 
-# Media files configuration
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Static files configuration
+# Static and media files configuration
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 
+# Static files directory for development
 if DEBUG:
     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Language and time zone settings
+# Internationalization settings
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
+USE_L10N = True
 USE_TZ = True
 
-# Database configuration (using SQLite for development)
+# Database configuration (SQLite for development)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -136,7 +137,7 @@ DATABASES = {
     }
 }
 
-# Password validation
+# Password validation settings
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -151,4 +152,3 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-

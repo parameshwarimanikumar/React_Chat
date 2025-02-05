@@ -8,7 +8,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
-      const token = localStorage.getItem('access'); // Fetch JWT token from local storage
+      const token = localStorage.getItem('access_token'); // Fetch JWT token from local storage
       if (!token) {
         console.log("No access token found.");
         setLoading(false);
@@ -21,11 +21,17 @@ const Navbar = () => {
             'Authorization': `Bearer ${token}`, // Set the authorization header
           },
         });
-        console.log("Response from /api/current_user/:", response.data); // Debugging line
+        console.log("Response from /api/current_user:", response.data); // Debugging line
         setCurrentUser(response.data.username); // Set the current user
       } catch (error) {
         console.error('Error fetching current user:', error);
-        setError('Failed to load user data.');
+        if (error.response && error.response.status === 401) {
+          setError('Unauthorized. Please log in again.');
+          localStorage.clear(); // Clear invalid token
+          window.location.href = '/login'; // Redirect to login page
+        } else {
+          setError('Failed to load user data.');
+        }
       } finally {
         setLoading(false);
       }
@@ -35,9 +41,8 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    // Clear user data from localStorage and redirect to login page
-    localStorage.removeItem('access'); // Clear the access token
-    localStorage.removeItem('refresh'); // Clear the refresh token
+    localStorage.removeItem('access_token'); // Clear the access token
+    localStorage.removeItem('refresh_token'); // Clear the refresh token
     window.location.href = '/login'; // Redirect to login
   };
 
@@ -58,6 +63,6 @@ const Navbar = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Navbar;

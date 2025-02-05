@@ -1,20 +1,13 @@
+# yourapp/urls.py
 from django.urls import path
-from .views import (
-    login_user,
-    create_user,
-    get_messages,
-    send_message,
-    update_profile_picture,
-    user_list,
-    current_user,
-)
+from . import views
 
 urlpatterns = [
-    path('login/', login_user, name='login'),
-    path('register/', create_user, name='register'),
-    path('messages/<int:user_id>/', get_messages, name='get_messages'),
-    path('send-message/', send_message, name='send_message'),
-    path('update-profile-picture/', update_profile_picture, name='update_profile_picture'),
-    path('users/', user_list, name='user_list'),
-    path('current_user/', current_user, name='current_user'),  # Updated URL pattern to match the React fetch URL
+    path('users/', views.user_list, name='user_list'),
+    path('current_user/', views.current_user, name='current_user'),
+    path('login/', views.login_user, name='login_user'),
+    path('create_user/', views.create_user, name='create_user'),
+    path('messages/<int:user_id>/', views.get_messages, name='get_messages'),
+    path('send_message/', views.send_message, name='send_message'),
+    path('update_profile_picture/', views.update_profile_picture, name='update_profile_picture'),
 ]
