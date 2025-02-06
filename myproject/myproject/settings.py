@@ -23,14 +23,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
-    'myapp',  # Replace 'myapp' with your actual app name
     'channels',
+    'myapp',  # Replace 'myapp' with your actual app name
 ]
 
 # Middleware configuration
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be before CommonMiddleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -40,15 +41,22 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS policy settings
-CORS_ALLOW_ALL_ORIGINS = True  # Ensure this is False in production
+# ✅ Fixed CORS policy settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # React app for development
-    'https://yourfrontenddomain.com',  # Replace with your frontend domain in production
+    "http://localhost:3000",  # React frontend
+    "http://127.0.0.1:3000",  # Alternative localhost
+]
+CORS_ALLOW_CREDENTIALS = True  # Allow credentials for secure sessions
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
 ]
 
-# Custom user model and authentication backends
+# Custom user model
 AUTH_USER_MODEL = 'myapp.CustomUser'
+
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
     'myapp.backends.EmailBackend',  # Custom email backend
     'django.contrib.auth.backends.ModelBackend',
@@ -61,11 +69,20 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Require authentication for all API endpoints
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ] if not DEBUG else [
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.renderers.JSONRenderer',
+    ],
 }
 
 # Simple JWT configuration
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -81,7 +98,7 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Ensure templates directory exists
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -102,7 +119,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],  # Ensure Redis is running on this port
+            'hosts': [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')],
         },
     },
 }
@@ -113,11 +130,11 @@ MEDIA_URL = '/media/'
 
 # Static files directory for development
 if DEBUG:
-    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+    STATICFILES_DIRS = [BASE_DIR / 'static']
 else:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

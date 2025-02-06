@@ -7,7 +7,7 @@ const Home = () => {
     const [selectedUser, setSelectedUser] = useState(null);
 
     const handleSelectUser = (user) => {
-        setSelectedUser(user);
+        setSelectedUser(user); // Update selected user
     };
 
     return (

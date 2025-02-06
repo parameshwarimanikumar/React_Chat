@@ -1,5 +1,5 @@
+// Register.js
 import React, { useState } from "react";
-import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import './register.css';
 
@@ -26,21 +26,18 @@ const Register = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:8000/api/users/create/', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+            const response = await fetch('http://localhost:8000/api/users/create/', {
+                method: 'POST',
+                body: formData,
             });
 
             if (response.status === 201) {
                 navigate("/login");
+            } else {
+                setErrorMessage("Registration failed. Try again.");
             }
         } catch (error) {
-            if (error.response) {
-                setErrorMessage(JSON.stringify(error.response.data));
-            } else {
-                setErrorMessage("Registration failed.");
-            }
+            setErrorMessage("Registration failed. Try again.");
         }
     };
 

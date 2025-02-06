@@ -1,5 +1,3 @@
-# myapp/views.py
-
 import logging
 from django.contrib.auth import authenticate
 from django.db.models import Q
@@ -8,37 +6,41 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
 from .models import CustomUser, Message
 from .serializers import UserSerializer, UpdateProfilePictureSerializer, MessageSerializer
 
 logger = logging.getLogger(__name__)
 
+@csrf_exempt
 @api_view(['POST'])
 def login_user(request):
+    """Handles user login and returns JWT tokens."""
     email = request.data.get('email')
     password = request.data.get('password')
 
     if not email or not password:
-        logger.error("Email or password not provided in request.")
+        logger.warning("Login attempt with missing credentials.")
         return Response({'error': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = authenticate(request, email=email, password=password)
     
     if user:
         refresh = RefreshToken.for_user(user)
-        logger.info(f"User {email} authenticated successfully.")
+        logger.info(f"User {email} logged in successfully.")
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'username': user.username,
         }, status=status.HTTP_200_OK)
-    
-    logger.error(f"Invalid login attempt for email: {email}")
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
+    logger.warning(f"Invalid login attempt for email: {email}")
+    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_list(request):
+    """Returns a list of all registered users."""
     users = CustomUser.objects.all()
     serializer = UserSerializer(users, many=True, context={'request': request})
     return Response(serializer.data)
@@ -46,40 +48,51 @@ def user_list(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
-    serializer = UserSerializer(request.user, context={'request': request})
-    return Response({'username': request.user.username, 'profile_picture': request.user.profile_picture.url if request.user.profile_picture else None})
+    """Returns the authenticated user's details."""
+    user = request.user
+    return Response({
+        'username': user.username,
+        'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None
+    })
 
 @api_view(['POST'])
 def create_user(request):
+    """Handles user registration."""
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
+        logger.info(f"New user registered: {serializer.validated_data['email']}")
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    logger.warning(f"User registration failed: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_messages(request, user_id):
-    logger.info(f"User {request.user} is trying to access messages with user_id: {user_id}")
-    
+    """Fetch messages between the authenticated user and another user."""
     try:
-        CustomUser.objects.get(id=user_id)
+        other_user = CustomUser.objects.get(id=user_id)
         messages = Message.objects.filter(
-            (Q(sender=request.user) & Q(receiver_id=user_id)) |
-            (Q(sender_id=user_id) & Q(receiver=request.user))
+            (Q(sender=request.user) & Q(receiver=other_user)) |
+            (Q(sender=other_user) & Q(receiver=request.user))
         ).order_by('timestamp')
-        
+
         serializer = MessageSerializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     except CustomUser.DoesNotExist:
+        logger.error(f"User with ID {user_id} not found.")
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
     except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.exception("Error fetching messages")
+        return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_message(request):
+    """Handles sending messages between users."""
     sender = request.user
     receiver_id = request.data.get('recipient_id')
     content = request.data.get('content')
@@ -87,26 +100,50 @@ def send_message(request):
 
     if not receiver_id or not (content or file):
         return Response({'error': 'Receiver and message body or file are required.'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     try:
         receiver = CustomUser.objects.get(id=receiver_id)
         message = Message.objects.create(sender=sender, receiver=receiver, content=content, file=file)
         serializer = MessageSerializer(message)
+
+        logger.info(f"Message sent from {sender.email} to {receiver.email}")
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     except CustomUser.DoesNotExist:
         return Response({'error': 'Receiver not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        logger.exception("Error sending message")
+        return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_profile_picture(request):
+    """Handles updating a user's profile picture."""
     user = request.user
+
+    # Ensure file is uploaded
+    if 'profile_picture' not in request.FILES:
+        return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate file size and type
+    profile_picture = request.FILES['profile_picture']
+    allowed_types = ['image/jpeg', 'image/png']
+    max_size = 2 * 1024 * 1024  # 2MB
+
+    if profile_picture.content_type not in allowed_types:
+        return Response({'error': 'Invalid file type. Only JPG and PNG are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if profile_picture.size > max_size:
+        return Response({'error': 'File too large. Max size is 2MB.'}, status=status.HTTP_400_BAD_REQUEST)
+
     serializer = UpdateProfilePictureSerializer(user, data=request.data, partial=True)
-    
+
     if serializer.is_valid():
         serializer.save()
         return Response({
             'message': 'Profile picture updated successfully',
             'profile_picture_url': request.build_absolute_uri(user.profile_picture.url)
         }, status=status.HTTP_200_OK)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
