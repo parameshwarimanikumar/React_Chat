@@ -1,78 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import Cam from '../assets/Cam.jpg';  
-import Add from '../assets/Add.png';
-import More from '../assets/More.png';
-import Messages from './Messages';  
-import Input from './Input';  
+import React, { useState, useEffect } from 'react';
 
-const Chat = ({ selectedUser, currentUserId, socket, isTyping }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+const Chat = ({ selectedUser }) => {
+    const [messages, setMessages] = useState([]);
+    const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    // Get JWT token from localStorage
-    const token = localStorage.getItem('access_token'); 
+    useEffect(() => {
+        if (selectedUser) {
+            const fetchMessages = async () => {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`http://localhost:8000/api/messages/${selectedUser.id}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-    // Fetch current user data from the updated endpoint
-    fetch('/api/current_user/', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,  // Add JWT token to headers
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+                if (response.ok) {
+                    const data = await response.json();
+                    setMessages(data);
+                }
+            };
+
+            fetchMessages();
         }
-        return response.json();
-      })
-      .then(data => {
-        setCurrentUser(data);  // Set the fetched current user data
-      })
-      .catch(error => console.error('Error fetching current user:', error));
-  }, []);  // Empty dependency array means this runs once on mount
+    }, [selectedUser]);
 
-  console.log("Selected User:", selectedUser);  // Log selected user details
-  console.log("Current User:", currentUser);  // Log current user details
+    const handleSendMessage = async () => {
+        const token = localStorage.getItem('authToken');
+        const messageData = { content: message, recipient_id: selectedUser.id };
 
-  return (
-    <div className='chat'>
-      <div className='chatInfo'>
-        {selectedUser ? (
-          <div className="chatHeader">
-            <img
-              src={selectedUser.profile_picture || Cam}  // Use selectedUser.profile_picture for the profile image
-              alt={`${selectedUser.username} avatar`} 
-              className="userAvatar"  // Ensure the class name matches the CSS
-            />
-            <div className="userDetails">
-              <span>{selectedUser.username}</span>
-              <span className="status">{selectedUser.isOnline ? 'Online' : 'Offline'}</span>
+        const response = await fetch('http://localhost:8000/api/send_message/', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(messageData),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            setMessages([...messages, data]);
+            setMessage('');
+        }
+    };
+
+    return (
+        <div className="chat">
+            {selectedUser && <h3>Chatting with {selectedUser.username}</h3>}
+            <div className="messages">
+                {messages.map((msg, index) => (
+                    <div key={index}>{msg.content}</div>
+                ))}
             </div>
-          </div>
-        ) : (
-          <span>No user selected</span>
-        )}
-        <div className='chatIcons'>
-          <img src={Cam} alt="Camera" />  {/* Camera icon for other actions */}
-          <img src={Add} alt="Add" />
-          <img src={More} alt="More" />
+            <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type a message"
+            />
+            <button onClick={handleSendMessage}>Send</button>
         </div>
-      </div>
-
-      {/* Display current user info */}
-      {currentUser && (
-        <div className="currentUserInfo">
-          <h4>{currentUser.username}</h4>
-          <img src={currentUser.profile_picture || Cam} alt="Current User Avatar" />
-        </div>
-      )}
-
-      <Messages selectedUser={selectedUser} currentUserId={currentUserId} socket={socket} />
-      {isTyping && <div className="typingIndicator">Typing...</div>}
-      <Input selectedUser={selectedUser} currentUserId={currentUserId} socket={socket} />
-    </div>
-  );
+    );
 };
 
 export default Chat;

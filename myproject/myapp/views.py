@@ -2,7 +2,7 @@ import logging
 from django.contrib.auth import authenticate
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_user(request):
     """Handles user login and returns JWT tokens."""
     email = request.data.get('email')
@@ -37,6 +38,19 @@ def login_user(request):
     logger.warning(f"Invalid login attempt for email: {email}")
     return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_user(request):
+    """Handles user registration."""
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        logger.info(f"New user registered: {serializer.validated_data['email']}")
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    logger.warning(f"User registration failed: {serializer.errors}")
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_list(request):
@@ -54,18 +68,6 @@ def current_user(request):
         'username': user.username,
         'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None
     })
-
-@api_view(['POST'])
-def create_user(request):
-    """Handles user registration."""
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        logger.info(f"New user registered: {serializer.validated_data['email']}")
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    logger.warning(f"User registration failed: {serializer.errors}")
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
