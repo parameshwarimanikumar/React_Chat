@@ -24,6 +24,14 @@ def login_user(request):
         logger.warning("Login attempt with missing credentials.")
         return Response({'error': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Check if the user exists
+    try:
+        user = CustomUser.objects.get(email=email)
+    except CustomUser.DoesNotExist:
+        logger.warning(f"Login attempt for unregistered email: {email}")
+        return Response({'error': 'Please register first.'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Authenticate user
     user = authenticate(request, email=email, password=password)
     
     if user:
@@ -36,7 +44,7 @@ def login_user(request):
         }, status=status.HTTP_200_OK)
 
     logger.warning(f"Invalid login attempt for email: {email}")
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'error': 'Email or password mismatch.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

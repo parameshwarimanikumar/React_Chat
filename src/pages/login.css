@@ -1,48 +1,78 @@
+/* Container Styling */
 .formContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f0f0;
+  background: linear-gradient(to right, #d7dee5, #bdd1dd);
 }
 
+/* Form Wrapper */
 .formWrapper {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 300px;
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 350px;
   text-align: center;
 }
 
+/* Title */
 .title {
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: bold;
   margin-bottom: 20px;
+  color: #333;
 }
 
+/* Input Fields */
 input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin: 10px 0;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
+  font-size: 16px;
 }
 
+/* Common button styles */
 button {
   width: 100%;
-  padding: 10px;
-  background-color: #4CAF50;
+  padding: 12px;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease, transform 0.1s ease;
 }
 
-button:hover {
-  background-color: #45a049;
+/* Login & Register Button (Same Blue Color) */
+.login-btn,
+.register-btn {
+  background-color: #08508c; /* Dark Blue */
 }
 
-.error {
-  color: red;
+/* Hover Effect */
+.login-btn:hover,
+.register-btn:hover {
+  background-color: #287fc5;
+  transform: scale(1.05);
+}
+
+/* Active Effect (Click Animation) */
+.login-btn:active,
+.register-btn:active {
+  transform: scale(0.95);
+}
+
+/* Register Button Extra Margin */
+.register-btn {
   margin-top: 10px;
+}
+
+/* Loading State */
+.loading {
+  background-color: #ccc !important; /* Gray out the button */
+  cursor: not-allowed;
 }
