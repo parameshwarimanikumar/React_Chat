@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../service/apiService";  // ✅ Import API service
 import "./login.css";
 
 const Login = () => {
@@ -20,28 +21,16 @@ const Login = () => {
             return;
         }
 
-        const loginData = { email: email.trim(), password: password.trim() };
-
         try {
-            const response = await fetch("http://localhost:8000/api/login/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(loginData),
-            });
+            const data = await loginUser(email, password);  // ✅ Use loginUser function
 
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem("authToken", data.access);
-                localStorage.setItem("refreshToken", data.refresh);
+            if (data) {
+                localStorage.setItem("access_token", data.access);
+                localStorage.setItem("refresh_token", data.refresh);
                 localStorage.setItem("username", data.username);
                 navigate("/home");
-            } else if (response.status === 404) {
-                setErrorMessage("Please register first.");
-            } else if (response.status === 401) {
-                setErrorMessage("Email or password mismatch.");
             } else {
-                setErrorMessage(data.error || "Something went wrong.");
+                setErrorMessage("Invalid credentials or server error.");
             }
         } catch (error) {
             setErrorMessage("Network error. Please try again.");

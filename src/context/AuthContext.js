@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 export const AuthContext = createContext();
 
@@ -10,12 +10,19 @@ const AuthContextProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/current_user/');
+        const token = localStorage.getItem("token"); // Get token from storage
+        if (!token) throw new Error("No authentication token found.");
+
+        const response = await axios.get("http://localhost:8000/api/current_user/", {
+          headers: { Authorization: `Bearer ${token}` }, // Corrected template literal syntax
+        });
+
         setCurrentUser(response.data);
       } catch (error) {
         setError(error.response ? error.response.data.detail : error.message);
       }
     };
+
     fetchUser();
   }, []);
 

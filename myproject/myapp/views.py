@@ -24,14 +24,12 @@ def login_user(request):
         logger.warning("Login attempt with missing credentials.")
         return Response({'error': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check if the user exists
     try:
         user = CustomUser.objects.get(email=email)
     except CustomUser.DoesNotExist:
         logger.warning(f"Login attempt for unregistered email: {email}")
         return Response({'error': 'Please register first.'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Authenticate user
     user = authenticate(request, email=email, password=password)
     
     if user:
@@ -132,11 +130,9 @@ def update_profile_picture(request):
     """Handles updating a user's profile picture."""
     user = request.user
 
-    # Ensure file is uploaded
     if 'profile_picture' not in request.FILES:
         return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Validate file size and type
     profile_picture = request.FILES['profile_picture']
     allowed_types = ['image/jpeg', 'image/png']
     max_size = 2 * 1024 * 1024  # 2MB
