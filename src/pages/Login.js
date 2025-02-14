@@ -1,80 +1,99 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../service/apiService";  // ✅ Import API service
+import { loginUser } from "../service/apiService";
 import "./login.css";
 
 const Login = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setErrorMessage("");
-        setLoading(true);
+  // Handle form input changes
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-        if (!email || !password) {
-            setErrorMessage("Email and Password are required.");
-            setLoading(false);
-            return;
-        }
+  // Handle login submission
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const { email, password } = formData;
 
-        try {
-            const data = await loginUser(email, password);  // ✅ Use loginUser function
+    setErrorMessage("");
+    setLoading(true);
 
-            if (data) {
-                localStorage.setItem("access_token", data.access);
-                localStorage.setItem("refresh_token", data.refresh);
-                localStorage.setItem("username", data.username);
-                navigate("/home");
-            } else {
-                setErrorMessage("Invalid credentials or server error.");
-            }
-        } catch (error) {
-            setErrorMessage("Network error. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    if (!email || !password) {
+      setErrorMessage("Email and Password are required.");
+      setLoading(false);
+      return;
+    }
 
-    return (
-        <div className="formContainer">
-            <div className="formWrapper">
-                <span className="title">Login</span>
-                <form onSubmit={handleLogin}>
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`login-btn ${loading ? "loading" : ""}`}
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </button>
-                </form>
-                {errorMessage && <p className="error">{errorMessage}</p>}
+    try {
+      const data = await loginUser(email, password);
+      if (data?.access) {
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
+        localStorage.setItem("username", data.username);
+        console.log("✅ Login successful!");
 
-                <p className="register-text">Don't have an account?</p>
-                <button className="register-btn" onClick={() => navigate("/register")}>
-                    Register
-                </button>
-            </div>
-        </div>
-    );
+        navigate("/dashboard");
+      } else {
+        setErrorMessage("Invalid credentials. Please try again.");
+      }
+    } catch (error) {
+      setErrorMessage("Network error. Please check your connection.");
+      console.error("🚨 Login Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if form fields are filled
+  const isFormValid = formData.email && formData.password;
+
+  return (
+    <div className="formContainer">
+      <div className="formWrapper">
+        <span className="title">Login</span>
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            autoComplete="off"
+            value={formData.email}
+            onChange={handleChange}
+            aria-label="Email"
+            required
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            autoComplete="off"
+            value={formData.password}
+            onChange={handleChange}
+            aria-label="Password"
+            required
+          />
+          <button
+            type="submit"
+            disabled={!isFormValid || loading}
+            className={`login-btn ${loading ? "loading" : ""}`}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        {errorMessage && <p className="error">{errorMessage}</p>}
+
+        <p className="register-text">Don't have an account?</p>
+        <button className="register-btn" onClick={() => navigate("/register")}>
+          Register
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default Login;

@@ -10,36 +10,36 @@ const apiClient = axios.create({
     }
 });
 
-// 🔥 Automatically attach token to requests
+// 🔥 Automatically attach token to requests (except login)
 apiClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token'); // Retrieve token
-    if (token) {
+    const token = localStorage.getItem('access_token');
+
+    // 🚨 Skip Authorization header for login endpoint
+    if (!config.url.includes('login/') && token) {
         config.headers['Authorization'] = `Bearer ${token}`;
     }
+
     return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+}, (error) => Promise.reject(error));
 
 // ✅ Login User
 export const loginUser = async (email, password) => {
     try {
-        const response = await apiClient.post('login/', { email, password });
+        const response = await axios.post(`${API_BASE_URL}login/`, { email, password }, {
+            headers: { 'Content-Type': 'application/json' }
+        });
 
         if (response.status === 200) {
-            const { access, refresh, username } = response.data; // Extract fields correctly
-
+            const { access, refresh, username } = response.data;
             if (access) {
                 localStorage.setItem('access_token', access);
-                localStorage.setItem('refresh_token', refresh); // Store refresh token
-                localStorage.setItem('username', username); // Store username
+                localStorage.setItem('refresh_token', refresh);
+                localStorage.setItem('username', username);
                 console.log("Token stored:", access);
                 return response.data;
-            } else {
-                console.error("Login response does not contain an access token.");
-                return null;
             }
         }
+        return null;
     } catch (error) {
         console.error("Login failed:", error.response?.data || error.message);
         return null;
@@ -78,7 +78,7 @@ export const logoutUser = () => {
 
 // ✅ Check if User is Authenticated
 export const isAuthenticated = () => {
-    return !!localStorage.getItem('access_token'); // Returns true if token exists
+    return !!localStorage.getItem('access_token');
 };
 
 export default apiClient;
