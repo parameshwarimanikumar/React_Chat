@@ -1,6 +1,7 @@
+// src/pages/Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../service/apiService";
+import { loginUser } from "../services/apiService";
 import "./login.css";
 
 const Login = () => {
@@ -9,12 +10,10 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle form input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle login submission
   const handleLogin = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
@@ -34,21 +33,17 @@ const Login = () => {
         localStorage.setItem("access_token", data.access);
         localStorage.setItem("refresh_token", data.refresh);
         localStorage.setItem("username", data.username);
-        console.log("✅ Login successful!");
-
         navigate("/dashboard");
       } else {
         setErrorMessage("Invalid credentials. Please try again.");
       }
     } catch (error) {
       setErrorMessage("Network error. Please check your connection.");
-      console.error("🚨 Login Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Check if form fields are filled
   const isFormValid = formData.email && formData.password;
 
   return (
@@ -60,35 +55,25 @@ const Login = () => {
             type="email"
             name="email"
             placeholder="Email"
-            autoComplete="off"
             value={formData.email}
             onChange={handleChange}
-            aria-label="Email"
             required
           />
           <input
             type="password"
             name="password"
             placeholder="Password"
-            autoComplete="off"
             value={formData.password}
             onChange={handleChange}
-            aria-label="Password"
             required
           />
-          <button
-            type="submit"
-            disabled={!isFormValid || loading}
-            className={`login-btn ${loading ? "loading" : ""}`}
-          >
+          <button type="submit" disabled={!isFormValid || loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
         {errorMessage && <p className="error">{errorMessage}</p>}
-
-        <p className="register-text">Don't have an account?</p>
-        <button className="register-btn" onClick={() => navigate("/register")}>
+        <p>Don't have an account?</p>
+        <button onClick={() => navigate("/register")}>
           Register
         </button>
       </div>

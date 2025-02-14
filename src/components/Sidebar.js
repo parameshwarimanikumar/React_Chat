@@ -1,42 +1,23 @@
+// src/components/Sidebar.js
 import React, { useEffect, useState } from "react";
+import apiClient from '../services/apiService';
 
-const Sidebar = () => {
+const Sidebar = ({ onSelectUser }) => {
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await apiClient.get('users/');
+                const currentUser = localStorage.getItem('username');
+                const filteredUsers = response.data.filter(user => user.username !== currentUser);
+                setUsers(filteredUsers);
+            } catch (error) {
+                console.error('🔴 Failed to fetch users:', error.response?.data || error.message);
+            }
+        };
         fetchUsers();
     }, []);
-
-    const fetchUsers = async () => {
-        const token = localStorage.getItem("access_token");
-
-        if (!token) {
-            console.error("No auth token found in localStorage!");
-            return;
-        }
-
-        try {
-            const response = await fetch("http://localhost:8000/api/users/", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) {
-                console.error(`Server error: ${response.status}`);
-                const errorText = await response.text();
-                console.error("Error details:", errorText);
-                return;
-            }
-
-            const data = await response.json();
-            setUsers(data.filter(user => user.username !== localStorage.getItem("username")));
-        } catch (error) {
-            console.error("Network error:", error);
-        }
-    };
 
     return (
         <div className="sidebar">
@@ -44,7 +25,7 @@ const Sidebar = () => {
             <ul>
                 {users.length > 0 ? (
                     users.map((user) => (
-                        <li key={user.id}>
+                        <li key={user.id} onClick={() => onSelectUser(user)}>
                             {user.username} ({user.email})
                         </li>
                     ))
