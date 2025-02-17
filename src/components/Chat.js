@@ -1,9 +1,9 @@
-// src/components/Chat.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const Chat = ({ selectedUser }) => {
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState('');
+    const messagesEndRef = useRef(null);
 
     useEffect(() => {
         if (selectedUser) {
@@ -26,6 +26,10 @@ const Chat = ({ selectedUser }) => {
             fetchMessages();
         }
     }, [selectedUser]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     const handleSendMessage = async () => {
         const token = localStorage.getItem('authToken');
@@ -52,16 +56,22 @@ const Chat = ({ selectedUser }) => {
             {selectedUser && <h3>Chatting with {selectedUser.username}</h3>}
             <div className="messages">
                 {messages.map((msg, index) => (
-                    <div key={index}>{msg.content}</div>
+                    <div key={index} className={`message ${msg.sender === selectedUser.id ? 'received' : 'sent'}`}>
+                        {msg.content}
+                        <span className="timestamp">12:30 PM</span>
+                    </div>
                 ))}
+                <div ref={messagesEndRef} />
             </div>
-            <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type a message"
-            />
-            <button onClick={handleSendMessage}>Send</button>
+            <div className="input">
+                <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type a message"
+                />
+                <button onClick={handleSendMessage}>Send</button>
+            </div>
         </div>
     );
 };

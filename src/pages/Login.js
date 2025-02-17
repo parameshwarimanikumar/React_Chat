@@ -67,13 +67,20 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-          <button type="submit" disabled={!isFormValid || loading}>
+          <button 
+            type="submit" 
+            className={`login-btn ${loading ? "loading" : ""}`} 
+            disabled={!isFormValid || loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
         {errorMessage && <p className="error">{errorMessage}</p>}
         <p>Don't have an account?</p>
-        <button onClick={() => navigate("/register")}>
+        <button 
+          className="register-btn" 
+          onClick={() => navigate("/register")}
+        >
           Register
         </button>
       </div>

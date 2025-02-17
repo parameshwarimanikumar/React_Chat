@@ -1,4 +1,3 @@
-// src/components/Sidebar.js
 import React, { useEffect, useState } from "react";
 import apiClient from '../services/apiService';
 
@@ -21,12 +20,16 @@ const Sidebar = ({ onSelectUser }) => {
 
     return (
         <div className="sidebar">
-            <h2>Users</h2>
+            <h2>Chats</h2>
             <ul>
                 {users.length > 0 ? (
                     users.map((user) => (
                         <li key={user.id} onClick={() => onSelectUser(user)}>
-                            {user.username} ({user.email})
+                            <img src={user.profile_picture || '/default-avatar.png'} alt="Avatar" className="avatar"/>
+                            <div>
+                                <span className="username">{user.username}</span>
+                                
+                            </div>
                         </li>
                     ))
                 ) : (

@@ -1,4 +1,4 @@
-/* Container Styling */
+/* login.css */
 .formContainer {
   display: flex;
   justify-content: center;
@@ -7,7 +7,6 @@
   background: linear-gradient(to right, #d7dee5, #bdd1dd);
 }
 
-/* Form Wrapper */
 .formWrapper {
   background: white;
   padding: 25px;
@@ -17,7 +16,6 @@
   text-align: center;
 }
 
-/* Title */
 .title {
   font-size: 26px;
   font-weight: bold;
@@ -25,7 +23,6 @@
   color: #333;
 }
 
-/* Input Fields */
 input {
   width: 100%;
   padding: 12px;
@@ -35,7 +32,6 @@ input {
   font-size: 16px;
 }
 
-/* Common button styles */
 button {
   width: 100%;
   padding: 12px;
@@ -47,32 +43,32 @@ button {
   transition: background 0.3s ease, transform 0.1s ease;
 }
 
-/* Login & Register Button (Same Blue Color) */
 .login-btn,
 .register-btn {
   background-color: #08508c; /* Dark Blue */
 }
 
-/* Hover Effect */
 .login-btn:hover,
 .register-btn:hover {
   background-color: #287fc5;
   transform: scale(1.05);
 }
 
-/* Active Effect (Click Animation) */
 .login-btn:active,
 .register-btn:active {
   transform: scale(0.95);
 }
 
-/* Register Button Extra Margin */
 .register-btn {
   margin-top: 10px;
 }
 
-/* Loading State */
 .loading {
-  background-color: #ccc !important; /* Gray out the button */
+  background-color: #ccc !important;
   cursor: not-allowed;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
 }
