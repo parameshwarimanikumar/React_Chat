@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';  // Add this import for useState and useEffect
+import axios from 'axios';  // Add this import for axios
 
 const Chats = ({ onSelectUser }) => {
     const [users, setUsers] = useState([]);
@@ -28,20 +28,24 @@ const Chats = ({ onSelectUser }) => {
     };
 
     return (
-        <div className='chats'>
-            {error && <p className='error'>Error: {error}</p>}
+        <div className="chats">
+            {error && <p className="error">Error: {error}</p>}
             {users.length === 0 && !error ? (
                 <p>No users found.</p>
             ) : (
                 users.map(user => (
-                    <div className='userChat' key={user.id} onClick={() => handleUserClick(user)}>
-                        <div className='userChatInfo'>
+                    <div
+                        className="userChat"
+                        key={user.id}
+                        onClick={() => handleUserClick(user)}
+                    >
+                        <div className="userChatInfo">
                             <img
-                                src={user.profile_picture_url ? user.profile_picture_url : '/assets/default-avatar.jpeg'}
+                                src={user.profile_picture_url || '/assets/default-avatar.jpeg'} 
                                 alt={user.username}
-                                className='userAvatar'
+                                className="userAvatar"
                             />
-                            <span className='username'>{user.username}</span>
+                            <span className="username">{user.username}</span>
                         </div>
                     </div>
                 ))

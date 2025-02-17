@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Img from '../assets/Img.png';
 
 const Chat = ({ selectedUser }) => {
     const [messages, setMessages] = useState([]);
@@ -16,13 +17,11 @@ const Chat = ({ selectedUser }) => {
                         'Content-Type': 'application/json',
                     },
                 });
-
                 if (response.ok) {
                     const data = await response.json();
                     setMessages(data);
                 }
             };
-
             fetchMessages();
         }
     }, [selectedUser]);
@@ -35,19 +34,28 @@ const Chat = ({ selectedUser }) => {
         const token = localStorage.getItem('authToken');
         const messageData = { content: message, recipient_id: selectedUser.id };
 
+        const fileInput = document.getElementById('file-upload');
+        const file = fileInput.files[0];
+
+        const formData = new FormData();
+        formData.append('message_data', JSON.stringify(messageData));
+        if (file) {
+            formData.append('image', file);
+        }
+
         const response = await fetch('http://localhost:8000/api/send_message/', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(messageData),
+            body: formData,
         });
 
         if (response.ok) {
             const data = await response.json();
             setMessages([...messages, data]);
             setMessage('');
+            fileInput.value = '';  // Clear file input after sending
         }
     };
 
@@ -63,12 +71,21 @@ const Chat = ({ selectedUser }) => {
                 ))}
                 <div ref={messagesEndRef} />
             </div>
+
             <div className="input">
                 <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Type a message"
+                />
+                <label htmlFor="file-upload">
+                    <img src={Img} alt="Upload" width="30" height="30" />
+                </label>
+                <input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*"
                 />
                 <button onClick={handleSendMessage}>Send</button>
             </div>
