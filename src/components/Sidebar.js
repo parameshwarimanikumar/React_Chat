@@ -1,39 +1,79 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiService';
+import { useNavigate } from 'react-router-dom';
 
-const Sidebar = ({ onSelectUser }) => {
-    const [users, setUsers] = useState([]);
+const Sidebar = ({ onSelectUser, currentUser }) => {
+    const [users, setUsers] = useState([]); 
+    const [loading, setLoading] = useState(true); 
+    const [error, setError] = useState(null); 
+    const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUsers = async () => {
             try {
                 const response = await apiClient.get('users/');
-                const currentUser = localStorage.getItem('username');
-                const filteredUsers = response.data.filter(user => user.username !== currentUser);
+                // Only filter if currentUser is defined
+                const filteredUsers = currentUser
+                    ? response.data.filter(user => user.username !== currentUser.username)
+                    : response.data;
                 setUsers(filteredUsers);
             } catch (error) {
                 console.error('🔴 Failed to fetch users:', error.response?.data || error.message);
+                setError('Failed to load users. Please try again later.');
+            } finally {
+                setLoading(false);
             }
         };
         fetchUsers();
-    }, []);
+    }, [currentUser]); 
+
+    const filteredUsers = users.filter(user =>
+        (user.username?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    );
+
+    const handleSearch = (event) => {
+        setSearchTerm(event.target.value);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        navigate('/');
+    };
 
     return (
         <div className="sidebar">
-            <h2>Chats</h2>
+            <div className="sidebar-nav">
+                <h2>Chats</h2>
+                <button onClick={handleLogout} className="logout-button">
+                    Logout
+                </button>
+            </div>
+            <input
+                type="text"
+                placeholder="Search or start a new chat"
+                value={searchTerm}
+                onChange={handleSearch}
+                className="search-input"
+                aria-label="Search users"
+            />
+
+            {loading && <p>Loading users...</p>}
+            {error && <p className="error">{error}</p>}
+
             <ul>
-                {users.length > 0 ? (
-                    users.map((user) => (
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
                         <li key={user.id} onClick={() => onSelectUser(user)}>
-                            <img src={user.profile_picture || '/default-avatar.png'} alt="Avatar" className="avatar"/>
+                            <img src={user.profile_picture || '/default-avatar.png'} alt="Avatar" className="avatar" />
                             <div>
                                 <span className="username">{user.username}</span>
-                                
                             </div>
                         </li>
                     ))
                 ) : (
-                    <p>No users found</p>
+                    !loading && !error && <p>No users found</p>
                 )}
             </ul>
         </div>

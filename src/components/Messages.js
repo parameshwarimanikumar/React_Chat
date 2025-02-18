@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import './src/pages/dashboard.css';
 
 const Messages = ({ selectedUser, currentUserId, socket }) => {
   const [messages, setMessages] = useState([]);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';  // Add this import for useState and useEffect
 import axios from 'axios';  // Add this import for axios
+import './src/pages/dashboard.css';  // Ensure this is the correct path to your CSS file
 
 const Chats = ({ onSelectUser }) => {
     const [users, setUsers] = useState([]);
@@ -41,7 +42,7 @@ const Chats = ({ onSelectUser }) => {
                     >
                         <div className="userChatInfo">
                             <img
-                                src={user.profile_picture_url || '/assets/default-avatar.jpeg'} 
+                                src={user.avatar || '/assets/default-avatar.jpeg'} // Ensure avatar is fetched
                                 alt={user.username}
                                 className="userAvatar"
                             />

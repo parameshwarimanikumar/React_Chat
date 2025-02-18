@@ -1,4 +1,5 @@
 import React from 'react';
+import './src/pages/dashboard.css';
 
 const Message = ({ message, isSentByCurrentUser }) => {
   return (

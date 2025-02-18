@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaPaperPlane, FaImage, FaPaperclip } from 'react-icons/fa';  // Import icons
+import './src/pages/dashboard.css';
 
 const Input = ({ selectedUser, currentUserId, socket }) => {
   const [message, setMessage] = useState('');

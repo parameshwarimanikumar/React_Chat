@@ -1,4 +1,3 @@
-// src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Chat from '../components/Chat';
@@ -12,7 +11,7 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (!token) {
-      navigate('/');
+      navigate('/'); // Redirect to login if no token is found
     }
   }, [navigate]);
 
@@ -24,7 +23,15 @@ const Dashboard = () => {
     <div className='home'>
       <div className='container'>
         <Sidebar onSelectUser={handleSelectUser} />
-        <Chat selectedUser={selectedUser} />
+        
+        {/* Check if a user is selected before rendering the Chat component */}
+        <div className='chat-container'>
+          {selectedUser ? (
+            <Chat selectedUser={selectedUser} />
+          ) : (
+            <div className='select-user-message'>Please select a user to start chatting</div>
+          )}
+        </div>
       </div>
     </div>
   );

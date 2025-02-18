@@ -9,17 +9,21 @@ const Chat = ({ selectedUser }) => {
     useEffect(() => {
         if (selectedUser) {
             const fetchMessages = async () => {
-                const token = localStorage.getItem('authToken');
-                const response = await fetch(`http://localhost:8000/api/messages/${selectedUser.id}/`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setMessages(data);
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const response = await fetch(`http://localhost:8000/api/messages/${selectedUser.id}/`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setMessages(data);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch messages:', error);
                 }
             };
             fetchMessages();
@@ -31,31 +35,30 @@ const Chat = ({ selectedUser }) => {
     }, [messages]);
 
     const handleSendMessage = async () => {
-        const token = localStorage.getItem('authToken');
-        const messageData = { content: message, recipient_id: selectedUser.id };
+        try {
+            const token = localStorage.getItem('authToken');
+            const messageData = { content: message, recipient_id: selectedUser.id };
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput?.files?.[0];
 
-        const fileInput = document.getElementById('file-upload');
-        const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('message_data', JSON.stringify(messageData));
+            if (file) formData.append('image', file);
 
-        const formData = new FormData();
-        formData.append('message_data', JSON.stringify(messageData));
-        if (file) {
-            formData.append('image', file);
-        }
+            const response = await fetch('http://localhost:8000/api/send_message/', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData,
+            });
 
-        const response = await fetch('http://localhost:8000/api/send_message/', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
-            body: formData,
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            setMessages([...messages, data]);
-            setMessage('');
-            fileInput.value = '';  // Clear file input after sending
+            if (response.ok) {
+                const data = await response.json();
+                setMessages([...messages, data]);
+                setMessage('');
+                if (fileInput) fileInput.value = ''; // Clear file input
+            }
+        } catch (error) {
+            console.error('Failed to send message:', error);
         }
     };
 
@@ -66,7 +69,7 @@ const Chat = ({ selectedUser }) => {
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender === selectedUser.id ? 'received' : 'sent'}`}>
                         {msg.content}
-                        <span className="timestamp">12:30 PM</span>
+                        <span className="timestamp">{msg.timestamp || '12:30 PM'}</span>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -82,11 +85,7 @@ const Chat = ({ selectedUser }) => {
                 <label htmlFor="file-upload">
                     <img src={Img} alt="Upload" width="30" height="30" />
                 </label>
-                <input
-                    id="file-upload"
-                    type="file"
-                    accept="image/*"
-                />
+                <input id="file-upload" type="file" accept="image/*" />
                 <button onClick={handleSendMessage}>Send</button>
             </div>
         </div>

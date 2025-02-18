@@ -63,7 +63,7 @@ button:hover {
 
 /* Sidebar and Chat Section */
 .sidebar {
-    flex: 1;
+    flex: 2;
     background-color: #7895ad;
     color: #ffffff;
     border-right: 1px solid rgba(158, 158, 231, 0.221);
@@ -72,8 +72,81 @@ button:hover {
     font-size: large;
 }
 
+/* Search Section */
+.search {
+    padding: 10px;
+    background-color: #50647d;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.searchForm {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 5px 10px;
+}
+
+.searchForm input {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.searchForm input::placeholder {
+    color: #999;
+}
+
+/* User Chat Container */
+.userChat {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: transparent;
+}
+
+.userChat:hover {
+    background-color: rgba(102, 130, 208, 0.2);
+}
+
+.userChatInfo {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.userChat img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+    border: 2px solid #fff;
+    background-color: #d8d8d8;
+}
+
+.userChatDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.username {
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+}
+
+/* Chat Section */
 .chat {
-    flex: 2;
+    flex: 1;
     background-color: #6b99b1;
     color: #fff;
     display: flex;
@@ -100,13 +173,14 @@ button:hover {
 }
 
 .userAvatar {
-    width: 40px;  /* WhatsApp-like avatar size */
-    height: 40px;
-    border-radius: 50%;  /* Circular image */
-    object-fit: cover;  /* Ensures the image fits within the circle */
-    margin-right: 10px;  /* Space between avatar and username */
-    background-color: #d8d8d8;  /* Default background if no image */
-    border: 2px solid #fff;  /* Clean white border around avatar */
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    background-color: #d8d8d8;
+    border: 2px solid #fff;
+    display: block;
 }
 
 .userDetails {
@@ -214,13 +288,14 @@ button:hover {
 }
 
 .input button {
-    background-color: #4298de;
+    background-color: #217dc8;
     border: none;
     cursor: pointer;
     color: #fff;
     border-radius: 5px;
     transition: background-color 0.3s ease;
     padding: 8px 16px;
+    width: fit-content;
 }
 
 .input button:hover {
@@ -232,27 +307,6 @@ button:hover {
     font-style: italic;
     color: #888;
     padding: 5px;
-}
-
-/* User Chat Container */
-.userChat {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.userChat:hover {
-    background-color: rgba(102, 130, 208, 0.1); /* Hover effect */
-}
-
-/* Username */
-.username {
-    font-size: 16px; /* Adjusted font size to match avatar */
-    color: white;
-    font-weight: bold;
 }
 
 /* Error Message */
