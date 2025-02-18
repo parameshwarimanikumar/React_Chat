@@ -5,8 +5,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
 // Protected route component to handle authentication
-const ProtectedRoute = ({ element, ...rest }) => {
-  const isAuthenticated = localStorage.getItem('access_token'); // You can check for your token here
+const ProtectedRoute = ({ element }) => {
+  const isAuthenticated = localStorage.getItem('access_token'); // Check for your token
   return isAuthenticated ? element : <Navigate to="/" />;
 };
 
@@ -16,7 +16,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute element={<Dashboard />} />}
+        />
       </Routes>
     </div>
   );

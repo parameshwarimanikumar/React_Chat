@@ -23,7 +23,7 @@ const Dashboard = () => {
     <div className='home'>
       <div className='container'>
         <Sidebar onSelectUser={handleSelectUser} />
-        
+
         {/* Check if a user is selected before rendering the Chat component */}
         <div className='chat-container'>
           {selectedUser ? (

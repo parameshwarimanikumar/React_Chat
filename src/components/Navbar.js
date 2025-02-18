@@ -25,8 +25,7 @@ const Navbar = () => {
           },
         });
         console.log("Response from /api/current_user:", response.data);
-        // Assuming the response contains a user object with a `username` property
-        setCurrentUser(response.data.username || 'Guest');
+        setCurrentUser(response.data.username || 'Guest'); // Set the username or Guest if missing
       } catch (error) {
         console.error('Error fetching current user:', error);
         if (error.response && error.response.status === 401) {
@@ -51,16 +50,16 @@ const Navbar = () => {
   };
 
   return (
-    <div className='navbar'>
-      <span className='logo'>Chat</span>
-      <div className='user'>
+    <div className="navbar">
+      <span className="logo">Chat</span>
+      <div className="user">
         {loading ? (
           <span>Loading...</span>
         ) : error ? (
           <span>{error}</span>
         ) : (
           <>
-            <span>{currentUser ? currentUser : "Guest"}</span>
+            <span>{currentUser ? currentUser : 'Guest'}</span>
             <button onClick={handleLogout}>Logout</button>
           </>
         )}
