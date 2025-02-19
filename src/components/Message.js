@@ -1,12 +1,14 @@
-import React from 'react';
-import './src/pages/dashboard.css';
+import React from "react";
+import "../pages/dashboard.css";
 
 const Message = ({ message, isSentByCurrentUser }) => {
   return (
-    <div className={isSentByCurrentUser ? 'message message--sent' : 'message message--received'}>
+    <div className={isSentByCurrentUser ? "message message--sent" : "message message--received"}>
       <div className="message__info">
-        <p className="message__body">{message.body}</p>
-        <span className="message__timestamp">{new Date(message.timestamp).toLocaleTimeString()}</span>
+        <p className="message__body">{message.content}</p>
+        <span className="message__timestamp">
+          {new Date(message.timestamp).toLocaleTimeString()}
+        </span>
       </div>
     </div>
   );

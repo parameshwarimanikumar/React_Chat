@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './src/pages/dashboard.css';
+import apiClient from '../services/apiService'; // Ensure you have an API service setup
+import '../pages/dashboard.css'; // Corrected CSS import
 
 const Navbar = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -13,25 +13,22 @@ const Navbar = () => {
     const fetchCurrentUser = async () => {
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.log("No access token found.");
+        console.log("🔴 No access token found. Redirecting to login...");
         setLoading(false);
+        navigate('/');
         return;
       }
 
       try {
-        const response = await axios.get('/api/current_user/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        console.log("Response from /api/current_user:", response.data);
-        setCurrentUser(response.data.username || 'Guest'); // Set the username or Guest if missing
+        const response = await apiClient.get('/current_user/');
+        console.log("✅ Fetched User:", response.data);
+        setCurrentUser(response.data); // Store full user object
       } catch (error) {
-        console.error('Error fetching current user:', error);
-        if (error.response && error.response.status === 401) {
-          setError('Unauthorized. Please log in again.');
-          localStorage.clear(); // Clear invalid token
-          navigate('/login'); // Redirect to login page using React Router
+        console.error('🔴 Error fetching current user:', error);
+        if (error.response?.status === 401) {
+          setError('Session expired. Please log in again.');
+          localStorage.clear();
+          navigate('/');
         } else {
           setError('Failed to load user data.');
         }
@@ -40,13 +37,12 @@ const Navbar = () => {
       }
     };
 
-    fetchCurrentUser(); // Fetch current user data on mount
+    fetchCurrentUser();
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token'); // Clear the access token
-    localStorage.removeItem('refresh_token'); // Clear the refresh token
-    navigate('/'); // Redirect to login page using React Router
+    localStorage.clear(); // Clears all stored data
+    navigate('/'); // Redirects to login
   };
 
   return (
@@ -56,12 +52,21 @@ const Navbar = () => {
         {loading ? (
           <span>Loading...</span>
         ) : error ? (
-          <span>{error}</span>
-        ) : (
+          <span className="error">{error}</span>
+        ) : currentUser ? (
           <>
-            <span>{currentUser ? currentUser : 'Guest'}</span>
+            {currentUser.profile_picture && (
+              <img
+                src={currentUser.profile_picture}
+                alt="Profile"
+                className="avatar"
+              />
+            )}
+            <span>{currentUser.username}</span>
             <button onClick={handleLogout}>Logout</button>
           </>
+        ) : (
+          <span>Guest</span>
         )}
       </div>
     </div>

@@ -1,64 +1,59 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Img from '../assets/Img.png';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import Img from "../assets/Img.png";
+import api from "../services/apiService";
 
 const Chat = ({ selectedUser }) => {
     const [messages, setMessages] = useState([]);
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState("");
     const messagesEndRef = useRef(null);
 
-    useEffect(() => {
-        if (selectedUser) {
-            const fetchMessages = async () => {
-                try {
-                    const token = localStorage.getItem('authToken');
-                    const response = await fetch(`http://localhost:8000/api/messages/${selectedUser.id}/`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        setMessages(data);
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch messages:', error);
-                }
-            };
-            fetchMessages();
+    const fetchMessages = useCallback(async () => {
+        if (!selectedUser) return;
+        try {
+            const response = await api.get(`messages/${selectedUser.id}/`);
+            setMessages(response.data);
+        } catch (error) {
+            console.error("Failed to fetch messages:", error);
         }
     }, [selectedUser]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        fetchMessages();
+    }, [fetchMessages]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
     const handleSendMessage = async () => {
+        if (!selectedUser || !message.trim()) {
+            console.error("🚨 Missing recipient or message content");
+            return;
+        }
+
         try {
-            const token = localStorage.getItem('authToken');
-            const messageData = { content: message, recipient_id: selectedUser.id };
-            const fileInput = document.getElementById('file-upload');
+            const formData = new FormData();
+            formData.append("recipient_id", selectedUser.id);
+            formData.append("content", message);
+
+            const fileInput = document.getElementById("file-upload");
             const file = fileInput?.files?.[0];
 
-            const formData = new FormData();
-            formData.append('message_data', JSON.stringify(messageData));
-            if (file) formData.append('image', file);
+            if (file) {
+                formData.append("file", file);
+            }
 
-            const response = await fetch('http://localhost:8000/api/send_message/', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData,
+            const response = await api.post("send_message/", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                setMessages([...messages, data]);
-                setMessage('');
-                if (fileInput) fileInput.value = ''; // Clear file input
+            if (response.status === 201) {
+                setMessages([...messages, response.data]);
+                setMessage("");
+                if (fileInput) fileInput.value = "";
             }
         } catch (error) {
-            console.error('Failed to send message:', error);
+            console.error("Failed to send message:", error.response?.data || error.message);
         }
     };
 
@@ -67,9 +62,9 @@ const Chat = ({ selectedUser }) => {
             {selectedUser && <h3>Chatting with {selectedUser.username}</h3>}
             <div className="messages">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.sender === selectedUser.id ? 'received' : 'sent'}`}>
+                    <div key={index} className={`message ${msg.sender === selectedUser.id ? "received" : "sent"}`}>
                         {msg.content}
-                        <span className="timestamp">{msg.timestamp || '12:30 PM'}</span>
+                        <span className="timestamp">{msg.timestamp || "12:30 PM"}</span>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />

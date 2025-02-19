@@ -1,56 +1,73 @@
 import React, { useState } from "react";
-import axios from 'axios';
+import axios from "axios";
+import imageCompression from "browser-image-compression";
 
 const UpdateProfilePicture = () => {
-    const [profilePicture, setProfilePicture] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [preview, setPreview] = useState(null);
     const [message, setMessage] = useState("");
+    const [uploading, setUploading] = useState(false);
 
-    // This function handles the file input change
-    const handleProfilePictureChange = (e) => {
-        setProfilePicture(e.target.files[0]); // Set the selected file in state
-    };
+    const handleProfilePictureChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    // This function handles the form submission
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!profilePicture) {
-            setMessage("Please select a profile picture to upload.");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('profile_picture', profilePicture);
+        // Image compression settings
+        const options = {
+            maxSizeMB: 0.5, // Compress to ~0.5MB
+            maxWidthOrHeight: 800, // Resize max dimension to 800px
+            useWebWorker: true,
+        };
 
         try {
-            const response = await axios.patch('http://localhost:8000/api/profile-picture/', formData, {
+            const compressedFile = await imageCompression(file, options);
+            setSelectedFile(compressedFile);
+
+            // Generate a preview of the image
+            const reader = new FileReader();
+            reader.readAsDataURL(compressedFile);
+            reader.onloadend = () => setPreview(reader.result);
+        } catch (error) {
+            console.error("Error compressing image:", error);
+            setMessage("Failed to compress image.");
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!selectedFile) return setMessage("Please select an image.");
+
+        const formData = new FormData();
+        formData.append("profile_picture", selectedFile);
+
+        setUploading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.patch("http://localhost:8000/api/profile-picture/", formData, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,  // Add token here
-                    'Content-Type': 'multipart/form-data',
-                }
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
             });
 
             if (response.status === 200) {
-                setMessage("Profile picture updated successfully.");
-                // Optionally update the profile picture in your frontend
+                setMessage("Profile picture updated successfully!");
             }
         } catch (error) {
             setMessage("Error updating profile picture.");
+        } finally {
+            setUploading(false);
         }
     };
 
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleProfilePictureChange}  // Handles file input
-                    required 
-                />
-                <button type="submit">Update Profile Picture</button>
+                <input type="file" accept="image/*" onChange={handleProfilePictureChange} required />
+                {preview && <img src={preview} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "50%" }} />}
+                <button type="submit" disabled={uploading}>{uploading ? "Uploading..." : "Update Picture"}</button>
             </form>
-            {message && <p>{message}</p>}  {/* Displays message to the user */}
+            {message && <p>{message}</p>}
         </div>
     );
 };

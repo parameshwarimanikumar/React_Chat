@@ -1,4 +1,3 @@
-// src/pages/Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/apiService";
@@ -16,19 +15,17 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const { email, password } = formData;
-
     setErrorMessage("");
     setLoading(true);
 
-    if (!email || !password) {
+    if (!formData.email || !formData.password) {
       setErrorMessage("Email and Password are required.");
       setLoading(false);
       return;
     }
 
     try {
-      const data = await loginUser(email, password);
+      const data = await loginUser(formData.email, formData.password);
       if (data?.access) {
         localStorage.setItem("access_token", data.access);
         localStorage.setItem("refresh_token", data.refresh);
@@ -43,8 +40,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
-  const isFormValid = formData.email && formData.password;
 
   return (
     <div className="formContainer">
@@ -67,22 +62,13 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-          <button 
-            type="submit" 
-            className={`login-btn ${loading ? "loading" : ""}`} 
-            disabled={!isFormValid || loading}
-          >
+          <button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
         {errorMessage && <p className="error">{errorMessage}</p>}
         <p>Don't have an account?</p>
-        <button 
-          className="register-btn" 
-          onClick={() => navigate("/register")}
-        >
-          Register
-        </button>
+        <button onClick={() => navigate("/register")}>Register</button>
       </div>
     </div>
   );

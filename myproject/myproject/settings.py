@@ -5,14 +5,19 @@ from datetime import timedelta
 # Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Secret key for Django (ensure to set this in production)
+# Secret key for Django (Set environment variable in production)
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-secret-key')
 
-# Debug mode (True for development, False for production)
+# Debug mode (Set to False in production)
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-# Allowed hosts for the application
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Allowed hosts
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "[::1]",  # IPv6 Support
+    os.environ.get("DJANGO_ALLOWED_HOST", ""),
+]
 
 # Installed apps
 INSTALLED_APPS = [
@@ -22,35 +27,49 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'channels',
-    'myapp',  # Replace 'myapp' with your actual app name
+
+    # Your apps
+    'myapp',
 ]
 
-# Middleware configuration
+# Middleware
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Must be before CommonMiddleware
+    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',  # Ensure CSRF is enabled
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# ✅ Fixed CORS policy settings
+# ✅ CORS Configuration
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React frontend
-    "http://127.0.0.1:3000",  # Alternative localhost
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
-CORS_ALLOW_CREDENTIALS = True  # Allow credentials for secure sessions
+CORS_ALLOW_CREDENTIALS = True  # Allow sending cookies & JWT tokens
+CORS_ALLOW_HEADERS = [  # ✅ Fix: Allow headers needed for authentication
+    'content-type',
+    'authorization',
+    'x-requested-with',
+    'accept',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+]
 
+# ✅ CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
 ]
 
 # Custom user model
@@ -58,19 +77,19 @@ AUTH_USER_MODEL = 'myapp.CustomUser'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
-    'myapp.backends.EmailBackend',  # Custom email backend
+    'myapp.backends.EmailBackend',  # Custom email authentication
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Django REST framework settings
+# ✅ Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # ✅ Use JWT Authentication
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Require authentication for all API endpoints
+        'rest_framework.permissions.IsAuthenticated',  # Require authentication for all endpoints
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -80,7 +99,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Simple JWT configuration
+# ✅ Simple JWT Configuration
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -88,17 +107,17 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('Bearer',),  # ✅ Ensure JWT tokens are prefixed with "Bearer"
 }
 
 # URL configuration
 ROOT_URLCONF = 'myproject.urls'
 
-# Template settings
+# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Ensure templates directory exists
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,10 +130,10 @@ TEMPLATES = [
     },
 ]
 
-# ASGI application for WebSockets
+# ✅ ASGI for WebSockets
 ASGI_APPLICATION = 'myproject.asgi.application'
 
-# Channel layers for Redis configuration
+# ✅ Redis Configuration for Channels (Fix for WebSockets)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -124,11 +143,10 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Static and media files configuration
+# ✅ Static and Media Files Configuration
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-# Static files directory for development
 if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']
 else:
@@ -136,17 +154,17 @@ else:
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
+# Default primary key type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Internationalization settings
+# ✅ Internationalization Settings
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Database configuration (SQLite for development)
+# ✅ Database Configuration (SQLite for Development)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -154,18 +172,10 @@ DATABASES = {
     }
 }
 
-# Password validation settings
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]

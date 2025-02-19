@@ -13,7 +13,6 @@ const Sidebar = ({ onSelectUser, currentUser }) => {
     const fetchUsers = async () => {
       try {
         const response = await apiClient.get('users/');
-        // Only filter if currentUser is defined
         const filteredUsers = currentUser
           ? response.data.filter(user => user.username !== currentUser)
           : response.data;
@@ -36,10 +35,24 @@ const Sidebar = ({ onSelectUser, currentUser }) => {
     setSearchTerm(event.target.value);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    navigate('/'); // Redirect to login page using React Router
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        console.log('No refresh token found');
+        return;
+      }
+
+      await apiClient.post('logout/', { refresh_token: refreshToken });
+
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+
+      console.log('Logged out successfully.');
+      navigate('/'); // Redirect to login page
+    } catch (error) {
+      console.error('Logout failed:', error.response?.data || error.message);
+    }
   };
 
   return (
