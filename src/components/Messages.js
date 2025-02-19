@@ -24,14 +24,14 @@ const Messages = ({ selectedUser, currentUserId, socket }) => {
 
   // Listen for incoming messages from socket
   useEffect(() => {
-    if (!socket || !socket.connected) return;
+    if (!socket) return;
 
     const handleMessage = (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     };
 
     socket.on("receive_message", handleMessage);
-    
+
     return () => socket.off("receive_message", handleMessage);
   }, [socket]);
 

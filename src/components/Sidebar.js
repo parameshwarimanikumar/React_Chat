@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../services/apiService';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Navbar from './Navbar';
+import Search from './Search'; // Import Search component
+import Chats from './Chats';
+import '../pages/dashboard.css';
 
 const Sidebar = ({ onSelectUser, currentUser }) => {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]); // For search results
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get('users/');
-        const filteredUsers = currentUser
+        const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('No token found. Please log in.');
+
+        const response = await axios.get('http://localhost:8000/api/users/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Remove the current user from the list
+        const filtered = currentUser
           ? response.data.filter(user => user.username !== currentUser)
           : response.data;
-        setUsers(filteredUsers);
+          
+        setUsers(filtered);
+        setFilteredUsers(filtered); // Default to all users
       } catch (error) {
         console.error('🔴 Failed to fetch users:', error.response?.data || error.message);
         setError('Failed to load users. Please try again later.');
@@ -27,72 +38,23 @@ const Sidebar = ({ onSelectUser, currentUser }) => {
     fetchUsers();
   }, [currentUser]);
 
-  const filteredUsers = users.filter(user =>
-    (user.username?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
-
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleLogout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        console.log('No refresh token found');
-        return;
-      }
-
-      await apiClient.post('logout/', { refresh_token: refreshToken });
-
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-
-      console.log('Logged out successfully.');
-      navigate('/'); // Redirect to login page
-    } catch (error) {
-      console.error('Logout failed:', error.response?.data || error.message);
+  // Handle search updates
+  const handleSearch = (searchTerm) => {
+    if (!searchTerm) {
+      setFilteredUsers(users); // Reset to full list
+    } else {
+      const filtered = users.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered);
     }
   };
 
   return (
     <div className="sidebar">
-      <div className="sidebar-nav">
-        <h2>Chats</h2>
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
-      </div>
-      <input
-        type="text"
-        placeholder="Search or start a new chat"
-        value={searchTerm}
-        onChange={handleSearch}
-        className="search-input"
-        aria-label="Search users"
-      />
-
-      {loading && <p>Loading users...</p>}
-      {error && <p className="error">{error}</p>}
-
-      <ul>
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map((user) => (
-            <li key={user.id} onClick={() => onSelectUser(user)}>
-              <img
-                src={user.profile_picture || '/default-avatar.png'}
-                alt="Avatar"
-                className="avatar"
-              />
-              <div>
-                <span className="username">{user.username}</span>
-              </div>
-            </li>
-          ))
-        ) : (
-          !loading && !error && <p>No users found</p>
-        )}
-      </ul>
+      <Navbar /> {/* Navbar remains at the top */}
+      <Search onSearch={handleSearch} /> {/* Search bar */}
+      <Chats users={filteredUsers} loading={loading} error={error} onSelectUser={onSelectUser} />
     </div>
   );
 };
