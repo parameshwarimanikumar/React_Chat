@@ -1,15 +1,31 @@
-import React from "react";
-import "../pages/dashboard.css";
+import { useRef, useEffect } from "react";
 
-const Message = ({ message, isSentByCurrentUser }) => {
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp);
+  return date.toDateString();
+};
+
+const Message = ({ messages, currentUserId }) => {
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
-    <div className={isSentByCurrentUser ? "message message--sent" : "message message--received"}>
-      <div className="message__info">
-        <p className="message__body">{message.content}</p>
-        <span className="message__timestamp">
-          {new Date(message.timestamp).toLocaleTimeString()}
-        </span>
-      </div>
+    <div className="messages">
+      {messages.map((message, index) => (
+        <div key={message.id}>
+          {index === 0 || formatDate(messages[index - 1].timestamp) !== formatDate(message.timestamp) ? (
+            <div className="date-separator">{formatDate(message.timestamp)}</div>
+          ) : null}
+
+          <div className={message.sender === currentUserId ? "sent" : "received"}>
+            {message.text}
+          </div>
+        </div>
+      ))}
+      <div ref={messagesEndRef} />
     </div>
   );
 };
