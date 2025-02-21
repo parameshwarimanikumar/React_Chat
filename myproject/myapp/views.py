@@ -1,6 +1,5 @@
 import logging
 from django.contrib.auth import authenticate
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -15,6 +14,16 @@ logger = logging.getLogger(__name__)
 
 def error_response(message, code=status.HTTP_400_BAD_REQUEST):
     return Response({'error': message}, status=code)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_user(request):
+    """Handles user registration."""
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()  # Password is now set properly inside `UserSerializer`
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -36,18 +45,6 @@ def login_user(request):
         }, status=status.HTTP_200_OK)
 
     return error_response('Invalid email or password.', status.HTTP_401_UNAUTHORIZED)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def create_user(request):
-    """Handles user registration."""
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        user.set_password(serializer.validated_data['password'])
-        user.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -73,9 +70,11 @@ def get_messages(request, user_id):
     """Fetch messages between the authenticated user and another user."""
     other_user = get_object_or_404(CustomUser, id=user_id)
     messages = Message.objects.filter(
-        (Q(sender=request.user, receiver=other_user)) |
-        (Q(sender=other_user, receiver=request.user))
-    ).select_related('sender', 'receiver').only('id', 'sender', 'receiver', 'content', 'timestamp', 'file')
+        sender=request.user, receiver=other_user
+    ) | Message.objects.filter(
+        sender=other_user, receiver=request.user
+    )
+    messages = messages.select_related('sender', 'receiver').only('id', 'sender', 'receiver', 'content', 'timestamp', 'file')
 
     serializer = MessageSerializer(messages, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -89,8 +88,6 @@ def send_message(request):
     receiver_id = request.data.get('recipient_id')
     content = request.data.get('content')
     file = request.FILES.get('file')
-
-    logger.info(f"📩 Incoming message request: recipient_id={receiver_id}, content={content}, file={file}")
 
     if not receiver_id or not (content or file):
         return error_response('Recipient and message content or file are required.')

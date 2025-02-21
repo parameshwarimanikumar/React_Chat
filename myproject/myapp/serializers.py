@@ -1,12 +1,22 @@
-# myapp/serializers.py
-
 from rest_framework import serializers
 from .models import CustomUser, Message
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'profile_picture']
+        fields = ['id', 'username', 'email', 'password', 'profile_picture']
+
+    def create(self, validated_data):
+        """Override create method to hash password before saving."""
+        user = CustomUser(
+            username=validated_data['username'],
+            email=validated_data['email']
+        )
+        user.set_password(validated_data['password'])  # Hash password
+        user.save()
+        return user
 
 class UpdateProfilePictureSerializer(serializers.ModelSerializer):
     class Meta:

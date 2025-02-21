@@ -7,7 +7,7 @@ const apiClient = axios.create({
     headers: { 'Content-Type': 'application/json' },
 });
 
-// Token Refresh Logic
+// Function to check if a token is expired
 const isTokenExpired = (token) => {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -18,9 +18,17 @@ const isTokenExpired = (token) => {
     }
 };
 
+// Request interceptor to attach Authorization header
 apiClient.interceptors.request.use(async (config) => {
     let token = localStorage.getItem('access_token');
     const refreshToken = localStorage.getItem('refresh_token');
+
+    if (!refreshToken) {
+        console.error('🔴 Refresh token is missing! Redirecting to login...');
+        localStorage.clear();
+        window.location.href = '/';
+        return Promise.reject(new Error('Refresh token not found'));
+    }
 
     if (token && isTokenExpired(token)) {
         try {
@@ -30,7 +38,7 @@ apiClient.interceptors.request.use(async (config) => {
         } catch (error) {
             console.error('🔴 Token refresh failed:', error);
             localStorage.clear();
-            window.location.href = '/login';
+            window.location.href = '/';
             return Promise.reject(error);
         }
     }
@@ -42,6 +50,7 @@ apiClient.interceptors.request.use(async (config) => {
     return config;
 }, (error) => Promise.reject(error));
 
+// Response interceptor to handle unauthorized errors
 apiClient.interceptors.response.use(
     response => response,
     (error) => {
@@ -54,14 +63,13 @@ apiClient.interceptors.response.use(
     }
 );
 
-export const loginUser = async (email, password) => {
+// ✅ Add loginUser function here
+export const loginUser = async (credentials) => {
     try {
-        const response = await apiClient.post('/login/', { email, password });
-        localStorage.setItem('access_token', response.data.access);
-        localStorage.setItem('refresh_token', response.data.refresh);
+        const response = await apiClient.post('/login/', credentials);
         return response.data;
     } catch (error) {
-        console.error('🔴 Login failed:', error);
+        console.error("🔴 Login failed:", error);
         throw error;
     }
 };
