@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/apiService";
+import axios from "axios";
 import "./login.css";
+
+const API_URL = "http://localhost:8000/api/login/"; // Change this if needed
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -25,17 +27,25 @@ const Login = () => {
     }
 
     try {
-      const data = await loginUser(formData.email, formData.password);
-      if (data?.access) {
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
-        localStorage.setItem("username", data.username);
+      const response = await axios.post(API_URL, {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.data.access) {
+        localStorage.setItem("access_token", response.data.access);
+        localStorage.setItem("refresh_token", response.data.refresh);
+        localStorage.setItem("username", response.data.username);
         navigate("/dashboard");
       } else {
         setErrorMessage("Invalid credentials. Please try again.");
       }
     } catch (error) {
-      setErrorMessage("Network error. Please check your connection.");
+      if (error.response && error.response.data.error) {
+        setErrorMessage(error.response.data.error);
+      } else {
+        setErrorMessage("Network error. Please check your connection.");
+      }
     } finally {
       setLoading(false);
     }
