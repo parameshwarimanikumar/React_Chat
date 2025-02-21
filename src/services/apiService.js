@@ -18,23 +18,25 @@ const isTokenExpired = (token) => {
     }
 };
 
-// Request interceptor to attach Authorization header
+// Request Interceptor: Attach token & refresh if expired
 apiClient.interceptors.request.use(async (config) => {
     let token = localStorage.getItem('access_token');
     const refreshToken = localStorage.getItem('refresh_token');
 
     if (!refreshToken) {
-        console.error('🔴 Refresh token is missing! Redirecting to login...');
+        console.error('🔴 Refresh token missing! Redirecting to login...');
         localStorage.clear();
         window.location.href = '/';
         return Promise.reject(new Error('Refresh token not found'));
     }
 
     if (token && isTokenExpired(token)) {
+        console.log('🔄 Token expired! Refreshing...');
         try {
             const response = await axios.post(`${API_BASE_URL}/token/refresh/`, { refresh: refreshToken });
             token = response.data.access;
             localStorage.setItem('access_token', token);
+            console.log('✅ New Token:', token);
         } catch (error) {
             console.error('🔴 Token refresh failed:', error);
             localStorage.clear();
@@ -46,11 +48,11 @@ apiClient.interceptors.request.use(async (config) => {
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return config;
 }, (error) => Promise.reject(error));
 
-// Response interceptor to handle unauthorized errors
+// Response Interceptor: Handle 401 Unauthorized errors
 apiClient.interceptors.response.use(
     response => response,
     (error) => {
@@ -63,13 +65,48 @@ apiClient.interceptors.response.use(
     }
 );
 
-// ✅ Add loginUser function here
+// ✅ Login function
 export const loginUser = async (credentials) => {
     try {
         const response = await apiClient.post('/login/', credentials);
         return response.data;
     } catch (error) {
         console.error("🔴 Login failed:", error);
+        throw error;
+    }
+};
+
+// ✅ Send Message function
+export const sendMessage = async (selectedUser, messageText, selectedFile) => {
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+        console.error("🔴 No access token found! Redirecting to login...");
+        window.location.href = '/';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('recipient_id', selectedUser.id);
+    formData.append('content', messageText);
+    if (selectedFile) {
+        formData.append('file', selectedFile);
+    }
+
+    console.log("📤 Sending Message:", formData);
+
+    try {
+        const response = await axios.post(`${API_BASE_URL}/send_message/`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        console.log('✅ Message Sent:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('🔴 Send Message Error:', error.response?.data || error.message);
         throw error;
     }
 };
