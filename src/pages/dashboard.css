@@ -5,6 +5,10 @@
     padding: 0;
 }
 
+body {
+    font-family: Arial, sans-serif;
+}
+
 /* Layout for Home and Container */
 .home {
     display: flex;
@@ -30,7 +34,9 @@
     border-right: 1px solid rgba(158, 158, 231, 0.221);
     overflow-y: auto;
     font-size: large;
+    display: flex;
     max-height: 100vh;
+    flex-direction: column;
 }
 
 /* Sidebar Header */
@@ -58,10 +64,10 @@
 .sidebar__header input {
     width: 60%;
     padding: 8px;
-    background-color: #0fd7cd;
+    background-color: #ffffff;
     border: none;
     outline: none;
-    color: #2c0d0d;
+    color: #333;
     border-radius: 5px;
 }
 
@@ -129,6 +135,7 @@
     overflow-y: auto;
     padding: 10px;
     background-color: #f9f9f9;
+    max-height: 70vh;
 }
 
 /* Messages container should allow proper alignment */
@@ -152,15 +159,15 @@
 
 /* Sent message (current user) */
 .message.sent {
-    align-self: flex-end; /* Align right */
-    background-color: #cff1b4; /* Light green */
+    align-self: flex-end;
+    background-color: #cff1b4;
     text-align: right;
 }
 
 /* Received message (other user) */
 .message.received {
-    align-self: flex-start; /* Align left */
-    background-color: #ffffff; /* White */
+    align-self: flex-start;
+    background-color: #ffffff;
     border: 1px solid #ccc;
     text-align: left;
 }
@@ -172,7 +179,7 @@
     margin-top: 5px;
 }
 
-/* date separator */
+/* Date separator */
 .date-separator {
     text-align: center;
     font-size: 12px;
@@ -201,6 +208,7 @@
     outline: none;
     border-radius: 5px;
     background-color: #eef3f5;
+    height: 40px;
 }
 
 .chat-input button {
@@ -211,6 +219,8 @@
     color: white;
     cursor: pointer;
     border-radius: 5px;
+    height: 40px;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .chat-input button:hover {
