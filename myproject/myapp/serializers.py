@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.conf import settings
 from .models import CustomUser, Message
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,11 +11,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Override create method to hash password before saving."""
+        profile_picture = validated_data.pop('profile_picture', None)  # Handle profile picture
         user = CustomUser(
             username=validated_data['username'],
             email=validated_data['email']
         )
         user.set_password(validated_data['password'])  # Hash password
+        if profile_picture:
+            user.profile_picture = profile_picture  # Save profile picture
         user.save()
         return user
 
@@ -31,8 +35,12 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = '__all__'
+
     def get_file_url(self, obj):
-        request = self.context.get('request')
+        """Return absolute file URL or None if no file is attached."""
         if obj.file:
-            return request.build_absolute_uri(obj.file.url)
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return f"{settings.MEDIA_URL}{obj.file.name}"  # Fallback without request
         return None
