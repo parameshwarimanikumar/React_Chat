@@ -13,8 +13,11 @@ from .serializers import UserSerializer, UpdateProfilePictureSerializer, Message
 logger = logging.getLogger(__name__)
 
 def error_response(message, code=status.HTTP_400_BAD_REQUEST):
+    """Helper function to return error responses."""
+    logger.error(f"Error: {message}")  # Log errors
     return Response({'error': message}, status=code)
 
+# User Registration
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_user(request):
@@ -23,8 +26,10 @@ def create_user(request):
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    return error_response(serializer.errors)
 
+# User Login
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
@@ -36,7 +41,8 @@ def login_user(request):
         return error_response('Email and password are required.')
 
     user = authenticate(request, email=email, password=password)
-    if user and user.is_active:
+
+    if user:
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
@@ -46,6 +52,7 @@ def login_user(request):
 
     return error_response('Invalid email or password.', status.HTTP_401_UNAUTHORIZED)
 
+# List All Users
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_list(request):
@@ -54,35 +61,40 @@ def user_list(request):
     serializer = UserSerializer(users, many=True, context={'request': request})
     return Response(serializer.data)
 
+# Get Authenticated User Info
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
     """Returns the authenticated user's details."""
     user = request.user
-    profile_picture_url = None
-    if user.profile_picture:
-        profile_picture_url = request.build_absolute_uri(user.profile_picture.url)
+    profile_picture_url = request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None
 
     return Response({
         'username': user.username,
         'profile_picture': profile_picture_url
     })
 
+# Get Messages Between Users
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_messages(request, user_id):
     """Fetch messages between the authenticated user and another user."""
     other_user = get_object_or_404(CustomUser, id=user_id)
+    
     messages = Message.objects.filter(
         sender=request.user, receiver=other_user
     ) | Message.objects.filter(
         sender=other_user, receiver=request.user
     )
+
     messages = messages.select_related('sender', 'receiver').only('id', 'sender', 'receiver', 'content', 'timestamp', 'file')
+
+    logger.info(f"Fetching messages between {request.user} and {other_user} -> SQL Query: {messages.query}")
 
     serializer = MessageSerializer(messages, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+# Send Message
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
@@ -90,22 +102,39 @@ def send_message(request):
     """Handles sending messages between users."""
     sender = request.user
     receiver_id = request.data.get('recipient_id')
-    content = request.data.get('content', '').strip()  # Default to empty string
+    content = request.data.get('content', '').strip()
     file = request.FILES.get('file')
 
-    if not receiver_id or not (content or file):
-        return error_response('Recipient and message content or file are required.')
+    if not receiver_id or (not content and not file):
+        return error_response('Recipient and either message content or file are required.')
 
     receiver = get_object_or_404(CustomUser, id=receiver_id)
 
     if sender == receiver:
         return error_response('You cannot send messages to yourself.')
 
-    message = Message.objects.create(sender=sender, receiver=receiver, content=content or '', file=file)
-    serializer = MessageSerializer(message, context={'request': request})
+    message = Message.objects.create(sender=sender, receiver=receiver, content=content, file=file)
+    
+    logger.info(f"Message sent from {sender} to {receiver}: {content[:50]}")  # Log message content (truncated)
 
+    serializer = MessageSerializer(message, context={'request': request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+# Delete Message
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_message(request, message_id):
+    """Handles deleting a message if the user is the sender."""
+    message = get_object_or_404(Message, id=message_id)
+
+    if message.sender != request.user:
+        return error_response("You can only delete messages that you sent.", status.HTTP_403_FORBIDDEN)
+
+    message.delete()
+    logger.info(f"Message {message_id} deleted by {request.user}")
+    return Response({"message": "Message deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+# Update Profile Picture
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])

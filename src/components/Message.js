@@ -20,7 +20,7 @@ const Message = ({ messages, currentUserId }) => {
             <div className="date-separator">{formatDate(message.timestamp)}</div>
           ) : null}
 
-          <div className={message.sender === currentUserId ? "sent" : "received"}>
+          <div className={message.sender.id === currentUserId ? "sent" : "received"}>
             {message.text}
           </div>
         </div>

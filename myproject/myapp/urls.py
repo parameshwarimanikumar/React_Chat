@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views  # ✅ Make sure this line is at the top!
+from . import views
 
 urlpatterns = [
     path('users/', views.user_list, name='user_list'),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('messages/<int:user_id>/', views.get_messages, name='get_messages'),
     path('send_message/', views.send_message, name='send_message'),
     path('update_profile_picture/', views.update_profile_picture, name='update_profile_picture'),
+    path("delete_message/<int:message_id>/", views.delete_message, name="delete_message"),
 ]

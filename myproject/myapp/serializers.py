@@ -30,8 +30,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['id', 'sender', 'sender_username', 'receiver', 'receiver_username', 'content', 'file', 'file_url', 'timestamp']
-
+        fields = '__all__'
     def get_file_url(self, obj):
         request = self.context.get('request')
         if obj.file:
