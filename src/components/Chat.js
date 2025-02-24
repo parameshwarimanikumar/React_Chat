@@ -52,24 +52,37 @@ const Chat = ({ selectedUser }) => {
         }
     };
 
+    // 🛑 Handle message deletion
+    const handleDeleteMessage = async (messageId) => {
+        try {
+            await api.delete(`delete_message/${messageId}/`);
+            setMessages(messages.filter((msg) => msg.id !== messageId));
+        } catch (error) {
+            console.error("Failed to delete message:", error.response?.data || error.message);
+        }
+    };
+
     return (
         <div className="chat">
             {selectedUser && <h3>Chat with {selectedUser.username}</h3>}
             <div className="messages">
-                {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.sender === selectedUser.id ? "received" : "sent"}`}>
+                {messages.map((msg) => (
+                    <div key={msg.id} className={`message ${msg.sender === selectedUser.id ? "received" : "sent"}`}>
                         {msg.file ? (
                             msg.file.match(/.(jpeg|jpg|png|gif|bmp|webp)$/i) ? (
                                 <img src={msg.file} alt="Uploaded" className="message-img" />
                             ) : (
-                                <a href={msg.file} download>
-                                    {msg.file.split("/").pop()}
-                                </a>
+                                <a href={msg.file} download>{msg.file.split("/").pop()}</a>
                             )
                         ) : (
                             <p>{msg.content}</p>
                         )}
                         <span className="timestamp">{msg.timestamp || "12:30 PM"}</span>
+                        
+                        {/* Delete Button (Only for Sent Messages) */}
+                        {msg.sender !== selectedUser.id && (
+                            <button className="delete-btn" onClick={() => handleDeleteMessage(msg.id)}>❌</button>
+                        )}
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
