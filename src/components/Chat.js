@@ -5,6 +5,7 @@ import api from "../services/apiService";
 const Chat = ({ selectedUser }) => {
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
     const messagesEndRef = useRef(null);
 
     const fetchMessages = useCallback(async () => {
@@ -26,22 +27,16 @@ const Chat = ({ selectedUser }) => {
     }, [messages]);
 
     const handleSendMessage = async () => {
-        if (!selectedUser || !message.trim()) {
-            console.error("🚨 Missing recipient or message content");
+        if (!selectedUser || (!message.trim() && !selectedFile)) {
+            console.error("🚨 Missing recipient, message content, or file");
             return;
         }
 
         try {
             const formData = new FormData();
             formData.append("recipient_id", selectedUser.id);
-            formData.append("content", message);
-
-            const fileInput = document.getElementById("file-upload");
-            const file = fileInput?.files?.[0];
-
-            if (file) {
-                formData.append("file", file);
-            }
+            if (message.trim()) formData.append("content", message);
+            if (selectedFile) formData.append("file", selectedFile);
 
             const response = await api.post("send_message/", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -50,7 +45,7 @@ const Chat = ({ selectedUser }) => {
             if (response.status === 201) {
                 setMessages([...messages, response.data]);
                 setMessage("");
-                if (fileInput) fileInput.value = "";
+                setSelectedFile(null);
             }
         } catch (error) {
             console.error("Failed to send message:", error.response?.data || error.message);
@@ -59,11 +54,21 @@ const Chat = ({ selectedUser }) => {
 
     return (
         <div className="chat">
-            {selectedUser && <h3>Chatting with {selectedUser.username}</h3>}
+            {selectedUser && <h3>Chat with {selectedUser.username}</h3>}
             <div className="messages">
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender === selectedUser.id ? "received" : "sent"}`}>
-                        {msg.content}
+                        {msg.file ? (
+                            msg.file.match(/.(jpeg|jpg|png|gif|bmp|webp)$/i) ? (
+                                <img src={msg.file} alt="Uploaded" className="message-img" />
+                            ) : (
+                                <a href={msg.file} download>
+                                    {msg.file.split("/").pop()}
+                                </a>
+                            )
+                        ) : (
+                            <p>{msg.content}</p>
+                        )}
                         <span className="timestamp">{msg.timestamp || "12:30 PM"}</span>
                     </div>
                 ))}
@@ -80,7 +85,13 @@ const Chat = ({ selectedUser }) => {
                 <label htmlFor="file-upload">
                     <img src={Img} alt="Upload" width="30" height="30" />
                 </label>
-                <input id="file-upload" type="file" accept="image/*" />
+                <input
+                    id="file-upload"
+                    type="file"
+                    accept="*/*"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                />
+                {selectedFile && <p>File: {selectedFile.name}</p>}
                 <button onClick={handleSendMessage}>Send</button>
             </div>
         </div>

@@ -26,7 +26,14 @@ class UpdateProfilePictureSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender.username', read_only=True)
     receiver_username = serializers.CharField(source='receiver.username', read_only=True)
+    file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'sender', 'sender_username', 'receiver', 'receiver_username', 'content', 'file', 'timestamp']
+        fields = ['id', 'sender', 'sender_username', 'receiver', 'receiver_username', 'content', 'file', 'file_url', 'timestamp']
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file:
+            return request.build_absolute_uri(obj.file.url)
+        return None

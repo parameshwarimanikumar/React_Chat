@@ -37,6 +37,8 @@ body {
     display: flex;
     max-height: 100vh;
     flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f1f1f1;
 }
 
 /* Sidebar Header */
@@ -129,6 +131,24 @@ body {
     object-fit: cover;
 }
 
+/* Style for images inside sent messages */
+.message.sent img {
+    width: 40px; /* Adjust size as needed */
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Style for images inside received messages */
+.message.received img {
+    height: 40px;
+    width: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+
+
 /* Chat Messages */
 .chat-messages {
     flex: 1;
@@ -136,6 +156,8 @@ body {
     padding: 10px;
     background-color: #f9f9f9;
     max-height: 70vh;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f1f1f1;
 }
 
 /* Messages container should allow proper alignment */
@@ -259,8 +281,9 @@ body {
 button {
     padding: 6px 12px;
     cursor: pointer;
-    background-color: #6672cf;
+    background-color: #2938a7;
     color: white;
+    width: fit-content;
     border: none;
     border-radius: 5px;
     transition: background-color 0.3s ease;
@@ -283,6 +306,7 @@ button:hover {
     background-color: #ffffff;
     border-radius: 20px;
     padding: 5px 10px;
+    gap: 5px;
 }
 
 .searchForm input {
@@ -301,6 +325,12 @@ button:hover {
 }
 
 /* File Upload */
+.input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .input input[type="file"] {
     display: none;
 }
@@ -313,7 +343,6 @@ button:hover {
     color: white;
     font-weight: bold;
     transition: background-color 0.3s ease;
-    margin-right: 10px;
 }
 
 .input label:hover {

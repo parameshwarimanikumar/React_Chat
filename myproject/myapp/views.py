@@ -21,7 +21,7 @@ def create_user(request):
     """Handles user registration."""
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()  # Password is now set properly inside `UserSerializer`
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -59,9 +59,13 @@ def user_list(request):
 def current_user(request):
     """Returns the authenticated user's details."""
     user = request.user
+    profile_picture_url = None
+    if user.profile_picture:
+        profile_picture_url = request.build_absolute_uri(user.profile_picture.url)
+
     return Response({
         'username': user.username,
-        'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None
+        'profile_picture': profile_picture_url
     })
 
 @api_view(['GET'])
@@ -76,7 +80,7 @@ def get_messages(request, user_id):
     )
     messages = messages.select_related('sender', 'receiver').only('id', 'sender', 'receiver', 'content', 'timestamp', 'file')
 
-    serializer = MessageSerializer(messages, many=True)
+    serializer = MessageSerializer(messages, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
@@ -86,7 +90,7 @@ def send_message(request):
     """Handles sending messages between users."""
     sender = request.user
     receiver_id = request.data.get('recipient_id')
-    content = request.data.get('content')
+    content = request.data.get('content', '').strip()  # Default to empty string
     file = request.FILES.get('file')
 
     if not receiver_id or not (content or file):
@@ -97,8 +101,8 @@ def send_message(request):
     if sender == receiver:
         return error_response('You cannot send messages to yourself.')
 
-    message = Message.objects.create(sender=sender, receiver=receiver, content=content, file=file)
-    serializer = MessageSerializer(message)
+    message = Message.objects.create(sender=sender, receiver=receiver, content=content or '', file=file)
+    serializer = MessageSerializer(message, context={'request': request})
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -114,4 +118,4 @@ def update_profile_picture(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    return error_response(serializer.errors)
+    return error_response(str(serializer.errors))

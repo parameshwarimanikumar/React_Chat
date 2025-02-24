@@ -8,8 +8,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("The Email field must be set")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        
-        # Handle password only if it's provided
+
         if password:
             user.set_password(password)
         else:
@@ -18,9 +17,12 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+
+        if not password:
+            raise ValueError("Superuser must have a password.")
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -33,10 +35,10 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    username = models.CharField(max_length=150, unique=False, blank=True, null=True)
+    username = models.CharField(max_length=150, blank=True, null=True, unique=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []  # Removed 'username' since it's optional
 
     objects = CustomUserManager()
 
@@ -47,9 +49,9 @@ class CustomUser(AbstractUser):
 class Message(models.Model):
     sender = models.ForeignKey(CustomUser, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(CustomUser, related_name='received_messages', on_delete=models.CASCADE)
-    content = models.TextField()
-    file = models.FileField(upload_to='uploads/', blank=True, null=True)
+    content = models.TextField(blank=True, null=True)  # Allow empty messages if only a file is sent
+    file = models.FileField(upload_to='uploads/', blank=True, null=True)  # Accepts all file types
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.sender.email} to {self.receiver.email}: {self.content[:20]}"
+        return f"{self.sender.email} to {self.receiver.email}: {self.content[:20] if self.content else 'File'}"
