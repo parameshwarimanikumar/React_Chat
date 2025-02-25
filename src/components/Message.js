@@ -16,11 +16,13 @@ const Message = ({ messages, currentUserId }) => {
     <div className="messages">
       {messages.map((message, index) => (
         <div key={message.id}>
+          {/* Display date separator if it's a new day */}
           {index === 0 || formatDate(messages[index - 1].timestamp) !== formatDate(message.timestamp) ? (
             <div className="date-separator">{formatDate(message.timestamp)}</div>
           ) : null}
 
-          <div className={message.sender.id === currentUserId ? "sent" : "received"}>
+          {/* Message Bubble */}
+          <div className={`message ${message.sender.id === currentUserId ? "sent" : "received"}`}>
             {message.text}
           </div>
         </div>

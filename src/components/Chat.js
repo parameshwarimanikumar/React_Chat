@@ -52,7 +52,6 @@ const Chat = ({ selectedUser }) => {
         }
     };
 
-    // 🛑 Handle message deletion
     const handleDeleteMessage = async (messageId) => {
         try {
             await api.delete(`delete_message/${messageId}/`);
@@ -63,9 +62,12 @@ const Chat = ({ selectedUser }) => {
     };
 
     return (
-        <div className="chat">
-            {selectedUser && <h3>Chat with {selectedUser.username}</h3>}
-            <div className="messages">
+        <div className="chat-container">
+            {selectedUser && <div className="chat-header">
+                <h3>{selectedUser.username}</h3>
+            </div>}
+
+            <div className="chat-messages">
                 {messages.map((msg) => (
                     <div key={msg.id} className={`message ${msg.sender === selectedUser.id ? "received" : "sent"}`}>
                         {msg.file ? (
@@ -79,7 +81,6 @@ const Chat = ({ selectedUser }) => {
                         )}
                         <span className="timestamp">{msg.timestamp || "12:30 PM"}</span>
                         
-                        {/* Delete Button (Only for Sent Messages) */}
                         {msg.sender !== selectedUser.id && (
                             <button className="delete-btn" onClick={() => handleDeleteMessage(msg.id)}>❌</button>
                         )}
@@ -88,12 +89,12 @@ const Chat = ({ selectedUser }) => {
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="input">
+            <div className="chat-input">
                 <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type a message"
+                    placeholder="Type a message..."
                 />
                 <label htmlFor="file-upload">
                     <img src={Img} alt="Upload" width="30" height="30" />
@@ -104,7 +105,7 @@ const Chat = ({ selectedUser }) => {
                     accept="*/*"
                     onChange={(e) => setSelectedFile(e.target.files[0])}
                 />
-                {selectedFile && <p>File: {selectedFile.name}</p>}
+                {selectedFile && <p>{selectedFile.name}</p>}
                 <button onClick={handleSendMessage}>Send</button>
             </div>
         </div>

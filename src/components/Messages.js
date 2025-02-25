@@ -62,8 +62,8 @@ const Messages = ({ selectedUser, currentUserId, socket }) => {
           messages.map((message) => (
             <Message
               key={message.id || message.timestamp}
-              message={message}
-              isSentByCurrentUser={message?.sender === currentUserId}
+              messages={[message]}  // Ensure messages are passed correctly
+              currentUserId={currentUserId}
             />
           ))
         )}
