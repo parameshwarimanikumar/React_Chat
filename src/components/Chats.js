@@ -17,7 +17,7 @@ const Chats = ({ users = [], loading, error, onSelectUser }) => {
                 className="avatar"
                 height={40}
                 width={40}
-                loading="lazy" // Improves performance
+                loading="eager" // Improves performance
               />
               <div>
                 <span className="username">{user.username}</span>

@@ -1,4 +1,3 @@
-// Register.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
@@ -17,6 +16,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const formData = new FormData();
     formData.append("username", username);
     formData.append("email", email);
@@ -31,13 +31,16 @@ const Register = () => {
         body: formData,
       });
 
+      const data = await response.json();
+
       if (response.status === 201) {
         navigate("/");
       } else {
-        setErrorMessage("Registration failed. User with this email already exists.");
+        // Show backend error messages
+        setErrorMessage(data.error || "Registration failed.");
       }
     } catch (error) {
-      setErrorMessage("Registration failed. User with this email already exists.");
+      setErrorMessage("Network error. Please try again.");
     }
   };
 
@@ -48,10 +51,9 @@ const Register = () => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Username (Optional)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
           />
           <input
             type="email"
