@@ -5,29 +5,25 @@ const formatDate = (timestamp) => {
   return date.toDateString();
 };
 
-const Message = ({ messages, currentUserId }) => {
+const Message = ({ message, currentUserId }) => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [message]);
+
+  // ✅ Ensure correct sender comparison
+  const isSentByCurrentUser = message.sender_id === currentUserId;
 
   return (
-    <div className="messages">
-      {messages.map((message, index) => (
-        <div key={message.id}>
-          {/* Display date separator if it's a new day */}
-          {index === 0 || formatDate(messages[index - 1].timestamp) !== formatDate(message.timestamp) ? (
-            <div className="date-separator">{formatDate(message.timestamp)}</div>
-          ) : null}
+    <div className="message-wrapper" ref={messagesEndRef}>
+      {/* Display Date Separator */}
+      <div className="date-separator">{formatDate(message.timestamp)}</div>
 
-          {/* Message Bubble */}
-          <div className={`message ${message.sender.id === currentUserId ? "sent" : "received"}`}>
-            {message.text}
-          </div>
-        </div>
-      ))}
-      <div ref={messagesEndRef} />
+      {/* Message Bubble */}
+      <div className={`message ${isSentByCurrentUser ? "sent" : "received"}`}>
+        {message.text}
+      </div>
     </div>
   );
 };

@@ -7,16 +7,29 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
+  // Handle profile picture selection
   const handleProfilePictureChange = (e) => {
-    setProfilePicture(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file);
+      setPreview(URL.createObjectURL(file)); // Preview image
+    }
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setErrorMessage(""); // Clear previous errors
+
+    if (!email || !password) {
+      setErrorMessage("Email and password are required.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("username", username);
     formData.append("email", email);
@@ -31,12 +44,12 @@ const Register = () => {
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({})); // Handle empty response
 
       if (response.status === 201) {
-        navigate("/");
+        console.log("User registered successfully:", data);
+        navigate("/"); // Redirect after successful registration
       } else {
-        // Show backend error messages
         setErrorMessage(data.error || "Registration failed.");
       }
     } catch (error) {
@@ -74,6 +87,8 @@ const Register = () => {
             accept="image/*"
             onChange={handleProfilePictureChange}
           />
+          {/* Show image preview */}
+          {preview && <img src={preview} alt="Preview" className="profile-preview" />}
           <button type="submit">Sign up</button>
         </form>
         {errorMessage && <p className="error">{errorMessage}</p>}
