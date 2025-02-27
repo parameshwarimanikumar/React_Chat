@@ -13,14 +13,15 @@ const Chat = ({ selectedUser, currentUserId, socket }) => {
     const messagesContainerRef = useRef(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
 
-    // ✅ Fetch messages from the backend
+    // ✅ Fetch messages from backend
     const fetchMessages = useCallback(async () => {
         if (!selectedUser) return;
         try {
             const response = await api.get(`messages/${selectedUser.id}/`);
-            setMessages(response.data);
+            console.log("Fetched messages:", response.data);
+            setMessages(response.data || []);
         } catch (error) {
-            console.error("Failed to fetch messages:", error);
+            console.error("Failed to fetch messages:", error.response?.data || error.message);
         }
     }, [selectedUser]);
 
@@ -30,10 +31,10 @@ const Chat = ({ selectedUser, currentUserId, socket }) => {
 
     // ✅ WebSocket listener for new messages
     const handleMessage = useCallback((newMessage) => {
-        if (newMessage?.id && !messages.some((msg) => msg.id === newMessage.id)) {
-            setMessages((prev) => [...prev, newMessage]);
-        }
-    }, [messages]);
+        if (!newMessage?.id) return;
+        console.log("New WebSocket Message:", newMessage);
+        setMessages((prev) => [...prev, newMessage]);
+    }, []);
 
     useEffect(() => {
         if (!socket) return;
@@ -61,6 +62,7 @@ const Chat = ({ selectedUser, currentUserId, socket }) => {
             });
 
             if (response.status === 201) {
+                console.log("Sent Message:", response.data);
                 setMessages((prev) => [...prev, response.data]);
                 setMessage("");
                 setSelectedFile(null);
@@ -126,6 +128,11 @@ const Chat = ({ selectedUser, currentUserId, socket }) => {
                     <p className="no-messages">No messages yet. Start the conversation!</p>
                 ) : (
                     messages.map((msg, index) => {
+                        if (!msg) {
+                            console.error(`Message at index ${index} is undefined.`);
+                            return null;
+                        }
+
                         const { id, content, file, sender, timestamp } = msg;
                         const msgTimestamp = timestamp ? parseISO(timestamp) : new Date();
                         const isSentByCurrentUser = sender?.id === currentUserId;
@@ -133,7 +140,8 @@ const Chat = ({ selectedUser, currentUserId, socket }) => {
                         return (
                             <React.Fragment key={id}>
                                 {/* ✅ Date Separator */}
-                                {index === 0 || format(parseISO(messages[index - 1].timestamp), "yyyy-MM-dd") !== format(msgTimestamp, "yyyy-MM-dd") ? (
+                                {index === 0 || 
+                                format(parseISO(messages[index - 1]?.timestamp), "yyyy-MM-dd") !== format(msgTimestamp, "yyyy-MM-dd") ? (
                                     <div className="date-header">
                                         {isToday(msgTimestamp)
                                             ? "Today"

@@ -149,6 +149,12 @@ body {
     gap: 10px;
 }
 
+.messages-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+
 /* Message Bubble */
 .message {
     padding: 12px;
@@ -166,7 +172,7 @@ body {
     background-color: #b0c4de;
     border-radius: 12px 12px 0 12px;
     padding: 12px;
-    text-align: left;
+    text-align: right;
     word-wrap: break-word;
 }
 
