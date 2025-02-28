@@ -179,7 +179,7 @@ body {
 /* Received Messages (align left) */
 .received {
     align-self: flex-start;
-    background-color: rgb(230, 240, 215);
+    background-color: rgb(206, 228, 174);
     border-radius: 12px 12px 12px 0;
     padding: 12px;
     text-align: left;

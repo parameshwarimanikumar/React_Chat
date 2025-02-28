@@ -76,6 +76,26 @@ export const loginUser = async (credentials) => {
     }
 };
 
+// ✅ Fetch Messages function
+export const fetchMessages = async (selectedUser) => {
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+        console.error("🔴 No access token found! Redirecting to login...");
+        window.location.href = '/';
+        return [];
+    }
+
+    try {
+        const response = await apiClient.get(`/messages/?recipient_id=${selectedUser.id}`);
+        console.log("📥 Fetched Messages:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error('🔴 Fetch Messages Error:', error.response?.data || error.message);
+        return [];
+    }
+};
+
 // ✅ Send Message function
 export const sendMessage = async (selectedUser, messageText, selectedFile) => {
     const token = localStorage.getItem('access_token');
